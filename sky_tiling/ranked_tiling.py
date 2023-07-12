@@ -216,7 +216,7 @@ class RankedTileGenerator:
 		tile_index = np.arange(len(data))
 		skymapUD = hp.ud_grade(self.skymap, resolution, power=-2)
 		npix = len(skymapUD)
-		theta, phi = hp.pix2ang(resolution, np.arange(0, npix))
+		# theta, phi = hp.pix2ang(resolution, np.arange(0, npix))
 		pVal = skymapUD[np.arange(0, npix)]
 
 		allTiles_probs = []
@@ -229,14 +229,13 @@ class RankedTileGenerator:
 
 		allTiles_probs_sorted = allTiles_probs[index]
 		tile_index_sorted = tile_index[index]
-
+		self.df = pd.DataFrame({"tile_index": tile_index_sorted, "tile_prob":allTiles_probs_sorted})
 		
-		return [tile_index_sorted, allTiles_probs_sorted]
+		return self.df
 
 
-	def plotTiles(self, ranked_tile_indices, allTiles_probs_sorted, tileFile=None, FOV=None,
-				  resolution=None, tileEdges=False, CI=0.9, save=False, tag=None, highlight=None,
-				  event=None, title=None, size=None):
+	def plotTiles(self, tileFile=None, FOV=None,resolution=None, tileEdges=False, CI=0.9,
+	       save=False, tag=None, highlight=None, event=None, title=None, size=None):
 		'''
 		METHOD 		:: This method plots the ranked-tiles on a hammer projection
 				       skymap. 
@@ -259,10 +258,12 @@ class RankedTileGenerator:
 		size		:: (Optional) Size of the plot if plot show option is used
 		'''			
 
-		from utilities import AllSkyMap_basic
+		from .utilities import AllSkyMap_basic
 		import pylab as pl
 
-		
+		ranked_tile_indices = self.df["tile_index"]
+		allTiles_probs_sorted = self.df["tile_prob"]
+
 		skymap = self.skymap
 		if resolution:
 			skymap = hp.ud_grade(skymap, resolution, power=-2)
@@ -283,12 +284,12 @@ class RankedTileGenerator:
 		pVal_CI = pVal[include]
 
 		if not size:
-			size=(15, 12)
+			size=(8, 5)
 		if save:
 			pl.figure(figsize=(60,40))
 			pl.rcParams.update({'font.size': 60})
 		else:
-			pl.rcParams.update({'font.size': 16})
+			pl.rcParams.update({'font.size': 12})
 			pl.figure(figsize=size)
 
 		if title:
@@ -305,9 +306,9 @@ class RankedTileGenerator:
 			m.label_meridians(lons, fontsize=60, vnudge=1, halign='left', hnudge=-1)
 			if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=0, markersize=50, alpha=1.0) 
 		else:
-			m.label_meridians(lons, fontsize=16, vnudge=1, halign='left', hnudge=-1) 
+			m.label_meridians(lons, fontsize=12, vnudge=1, halign='left', hnudge=-1) 
 		m.plot(RAP_map, DecP_map, color='y', marker='.', linewidth=0, markersize=3, alpha=0.8) 
-		if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=0, markersize=15, alpha=1.0) 
+		if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=0, markersize=5, alpha=1.0) 
 # 		if tileFile is None:
 # 			tileFile = self.configParser.get('tileFiles', 'tileFile')
 # 		tileData = np.recfromtxt(tileFile, names=True)
@@ -367,7 +368,7 @@ class RankedTileGenerator:
 				m.plot([RAP3, RAP1], [DecP3, DecP1],'k-', linewidth=lw, alpha=alpha) 
 
 			else:
-				m.plot(RAP_peak, DecP_peak, 'ko', markersize=5*lw, mew=1, alpha=alpha)
+				m.plot(RAP_peak, DecP_peak, 'ko', markersize=lw, mew=1, alpha=alpha)
 
 		if save:
 			filenametag = self.configParser.get('plot', 'filenametag')
@@ -378,9 +379,6 @@ class RankedTileGenerator:
 		else:
 			pl.show()
 		
-# 		print len(ranked_tile_indices)
-# 		print len(RA_tile[include_tiles])
-# 		print len(ranked_tile_probs)
 		ranks = np.arange(1, len(ranked_tile_indices)+1)
 		output = np.vstack((ranks, ranked_tile_indices, RA_tile[include_tiles], Dec_tile[include_tiles], ranked_tile_probs)).T
 		t = Table(rows=output, names=('Rank', 'index', 'RA', 'Dec', 'Probability'), dtype=('i4', 'i4', 'f8', 'f8', 'f8'))
