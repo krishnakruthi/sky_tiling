@@ -7,10 +7,9 @@ from astropy.utils.console import ProgressBar
 
 
 def preComputeMap(tileFile, telescope, target_nside=256):
-	surrogate_fitsfile = 'utilities/bayestar.fits.gz'
-	
+	surrogate_fitsfile = 'tests/bayestar.fits.gz'
 	start = time.time()
-	skymap = hp.read_map(surrogate_fitsfile, verbose=False)
+	skymap = hp.read_map(surrogate_fitsfile)
 	npix = len(skymap)
 	nside = hp.npix2nside(npix)
 	if nside != target_nside:
