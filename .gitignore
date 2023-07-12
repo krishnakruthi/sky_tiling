@@ -12,6 +12,7 @@ tile_pixel_maps/*
 *.log
 *.sql
 *.sqlite
+*.bak
 .ipynb*
 
 # Packages #
