@@ -1,3 +1,5 @@
+(this README needs to be edited. It's currently outdated)
+
 # sky_tiling
 
 ## Requirements: ## 
