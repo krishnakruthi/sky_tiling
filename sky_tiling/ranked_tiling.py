@@ -88,7 +88,7 @@ class RankedTileGenerator:
 		
 
 		
-		self.skymap = hp.read_map(skymapfile, verbose=False)
+		self.skymap = hp.read_map(skymapfile)
 		npix = len(self.skymap)
 		self.nside = hp.npix2nside(npix)
 		if tileFile is None:

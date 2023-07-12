@@ -25,8 +25,8 @@ import time
 import emcee
 import pylab as pl
 
-from utilities import tileCover
-from utilities import AllSkyMap_basic
+from ..utilities import tileCover
+from ..utilities import AllSkyMap_basic
 
 
     
@@ -200,7 +200,7 @@ class PlotterClass(PlaceTile):
 
 		pl.figure(figsize=(80,70))
 		pl.rcParams.update({'font.size': 60})
-		m = AllSkyMap(projection='hammer')
+		m = AllSkyMap_basic(projection='hammer')
 		RAP_map, DecP_map = m(ra_90, dec_90) ### 90% sky localization region
 		m.drawparallels(np.arange(-90.,120.,20.), color='grey', 
 						labels=[False,True,True,False], labelstyle='+/-')
