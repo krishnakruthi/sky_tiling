@@ -879,7 +879,7 @@ class Scheduler(RankedTileGenerator):
 		df = pd.DataFrame(np.vstack((tile_obs_times, scheduled.astype('int'), pVal_observed, slewDist,\
 									 airmass, moonTile, lunar_illumination)).T,\
 									 columns=['Observation_Time', 'Tile_Index', 'Tile_Probs', 'Slew Angle (deg)',\
-									 'Air_Mass', 'Lunar-tile', 'Lunar-tile separation (deg)', 'Lunar separation (deg)',\
+									 'Air_Mass', 'Lunar-tile', \
 									 'Lunar_Illumination'])
 		return df
 
