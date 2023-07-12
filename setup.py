@@ -1,7 +1,7 @@
 import os
 import sys
 import importlib
-from .utilities import createTileCenters, preComputeMap
+from utilities import createTileCenters, preComputeMap
 
 ## append this list with new packages ##
 dependencies = ['argparse', 'astropy', 'healpy', 'scipy']
