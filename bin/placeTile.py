@@ -17,7 +17,7 @@
 
 """
 
-from __future__ import division
+
 
 import numpy as np
 import healpy as hp
@@ -94,21 +94,21 @@ class PlaceTile:
 		sampler = emcee.EnsembleSampler(nwalkers, ndim, self.lnpost)
 		start = time.time()
 		pos, prob, state = sampler.run_mcmc(p0, 100)
-		print 'Burned in...'
-		print 'Time taken to burn in = ' + str(time.time() - start)
+		print('Burned in...')
+		print('Time taken to burn in = ' + str(time.time() - start))
 		sampler.reset()
 		start = time.time()
 		result = sampler.run_mcmc(pos, 10000)
 		end = time.time()
-		print 'Acceptance fraction = ' + str(np.mean(sampler.acceptance_fraction[:]))
-		print 'Time taken to finish the MCMC = ' + str(end - start)
+		print('Acceptance fraction = ' + str(np.mean(sampler.acceptance_fraction[:])))
+		print('Time taken to finish the MCMC = ' + str(end - start))
 		tileCenters = sampler.flatchain
 		
 		# save data in pickle file
 		# if file is loaded as dat, dat[:,0] are RAs
 		# dat[:,1] are Decs for the first tile and so on
-		import cPickle as pickle
-		print "\n\nSaving data to pickle file"
+		import pickle as pickle
+		print("\n\nSaving data to pickle file")
 		outfile = open('samples%dTile.pickle'%(self.numtiles,), 'wb')
 		data    = tileCenters.T
 		output  = []
@@ -164,7 +164,7 @@ class PlaceTile:
 		if samples is None:
 			samples = self.getSamples()
 		else:
-			print '\n\nReading data from pickled files...'
+			print('\n\nReading data from pickled files...')
 
 		ra_samples = []
 		dec_samples = []

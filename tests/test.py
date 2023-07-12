@@ -1,7 +1,7 @@
 import os
 import sys
 
-print '** Testing for standard telescopes and standard nside: **'
+print('** Testing for standard telescopes and standard nside: **')
 cmd1 = 'python ../setup.py -W sky_tile_work -T BlackGEM --site lasilla --timemag None --extension png'
 os.system(cmd1)
 

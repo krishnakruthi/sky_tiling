@@ -3,11 +3,11 @@ import pylab as pl
 import healpy as hp
 import pandas as pd
 from astropy.time import Time
-import ConfigParser
+import configparser
 import rankedTilesGenerator
 from astropy.table import Table
-import associateBNSEvents
-from AllSkyMap_basic import AllSkyMap
+from . import associateBNSEvents
+from .AllSkyMap_basic import AllSkyMap
 
 import os
 
@@ -50,7 +50,7 @@ class MakeVideo:
 			self.event=event
 		else:
 			self.event=None
-		self.configParser = ConfigParser.ConfigParser()
+		self.configParser = configparser.ConfigParser()
 		self.configParser.read(configfile)
 		[self.ra_CI, self.dec_CI, self.pVal_CI] = readSkymap(skymapFile)
 
@@ -137,8 +137,8 @@ class MakeVideo:
 		previousTileIndices = np.array([], dtype='int')
 		os.system('mkdir -p schedule_output')
 		for times, thisTileindex, title in zip(timeStamps, pointedTiles, self.df['Observation_Time']):
-			print Time(times, format='gps').iso
-			print thisTileindex, previousTileIndices
+			print(Time(times, format='gps').iso)
+			print(thisTileindex, previousTileIndices)
 			previousTileIndices = self.plotter(thisTileindex, previousTileIndices, title=title, tag=str(times))
 			
 		outputFileName = 'observation_schedule'

@@ -1,8 +1,8 @@
 import placeTile
 import healpy as hp
 import numpy as np
-import tileCover
-import cPickle as pickle
+from . import tileCover
+import pickle as pickle
 
 
 skymapFile = '/Users/ghosh4/Downloads/2016_fits/417956/bayestar.fits.gz'
@@ -54,9 +54,9 @@ obj = placeTile.PlaceTile(skymapData, FOV, numtiles=numtiles)
 
 result = obj.localizeTC()
 
-print result[0]
-print '****************'
-print result[1]
+print(result[0])
+print('****************')
+print(result[1])
 
 plotObj = placeTile.PlotterClass(result[0], result[1], FOV=FOV)
 plotObj.plotter(ra_90, dec_90, 'TwoTileCase_withOverlapCondition_' + str(numtiles) + 'Tiles.pdf')
@@ -69,7 +69,7 @@ for ii in range(0, len(result[0])):
 	thisPointing = tileObj.tileCover(tileCent, masked_points)
 	points_to_be_masked = np.vstack((thisPointing[0], thisPointing[1])).T
 	masked_points = np.vstack((masked_points, points_to_be_masked))
-	print 'Probability of this tile = ' + str(np.sum(thisPointing[2]))
+	print('Probability of this tile = ' + str(np.sum(thisPointing[2])))
 
 
 

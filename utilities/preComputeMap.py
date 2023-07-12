@@ -14,7 +14,7 @@ def preComputeMap(tileFile, telescope, target_nside=256):
 	npix = len(skymap)
 	nside = hp.npix2nside(npix)
 	if nside != target_nside:
-		print 'Downsampling to NSIDE = ' + str(target_nside)
+		print('Downsampling to NSIDE = ' + str(target_nside))
 
 	skymap = hp.ud_grade(skymap, target_nside, power=-2) ### Downsampling the sky-map
 	npix = len(skymap)
@@ -33,7 +33,7 @@ def preComputeMap(tileFile, telescope, target_nside=256):
 
 	closestTileIndex = []
 
-	print '\nCreating pixel tile map for skymaps of nside = ' + str(target_nside)
+	print('\nCreating pixel tile map for skymaps of nside = ' + str(target_nside))
 	with ProgressBar(len(pixelIndex)) as bar:
 		for ii in pixelIndex:
 			s = np.arccos( np.sin(np.pi*dec[ii]/180.)\
@@ -55,7 +55,7 @@ def preComputeMap(tileFile, telescope, target_nside=256):
 
 	end = time.time()
 
-	print 'Total time taken = ' + str(end - start)
+	print('Total time taken = ' + str(end - start))
 
 	tile_map_file_name = 'tile_pixel_maps/preComputed_' + telescope + '_pixel_indices_' + str(target_nside) + '.dat'
 	File = open(tile_map_file_name, 'wb')

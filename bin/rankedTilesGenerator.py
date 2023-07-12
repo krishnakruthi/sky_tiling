@@ -40,7 +40,7 @@ import pandas as pd
 from math import ceil
 
 import healpy as hp
-import ConfigParser
+import configparser
 from scipy import interpolate
 
 from astropy.time import Time
@@ -76,7 +76,7 @@ class RankedTileGenerator:
 		preComputeFiles  :: A list of all the precompute files
 		'''
 		
-		self.configParser = ConfigParser.ConfigParser()
+		self.configParser = configparser.ConfigParser()
 		self.configParser.read(configfile)
 
 		preComputed_64 = self.configParser.get('pixelTileMap', 'preComputed_64')
@@ -155,8 +155,8 @@ class RankedTileGenerator:
 		if resolution < 64: resolution = 64
 		filename = self.preCompDictFiles[resolution]
 		if not os.path.isfile(filename):
-			if verbose: print "Precomputed pickle file for this resolution is not found"
-			if verbose: print "Reverting to default resolution (= 256)"
+			if verbose: print("Precomputed pickle file for this resolution is not found")
+			if verbose: print("Reverting to default resolution (= 256)")
 			resolution = 256
 			filename = self.preCompDictFiles[resolution]
 
@@ -201,12 +201,12 @@ class RankedTileGenerator:
 		resolution = int(2 ** round(n)) ## resolution in powers of 2
 		if resolution > 2048: resolution = 2048
 		if resolution < 64: resolution = 64
-		if verbose: print 'Using resolution of ' + str(resolution)
+		if verbose: print('Using resolution of ' + str(resolution))
 		filename = self.preCompDictFiles[resolution]
-		if verbose: print filename
+		if verbose: print(filename)
 		if not os.path.isfile(filename):
-			if verbose: print "Precomputed pickle file for this resolution is not found"
-			if verbose: print "Reverting to default resolution (= 256)"
+			if verbose: print("Precomputed pickle file for this resolution is not found")
+			if verbose: print("Reverting to default resolution (= 256)")
 			resolution = 256
 			filename = self.preCompDictFiles[resolution]
 
@@ -330,7 +330,7 @@ class RankedTileGenerator:
 		if highlight:
 			alpha = 0.2
 		if highlight:
-			print 'Tile center of this pointing: (' + str(RA_tile[highlight])+','+ str(Dec_tile[highlight])+')'
+			print('Tile center of this pointing: (' + str(RA_tile[highlight])+','+ str(Dec_tile[highlight])+')')
 			RAP_hcenter, DecP_hcenter = m(RA_tile[highlight], Dec_tile[highlight])
 			if tileEdges:
 				[dec_down_h, dec_up_h,\
@@ -584,7 +584,7 @@ class Scheduler(RankedTileGenerator):
 	'''
 	def __init__(self, skymapFile, configfile, site=None):
 
-		configParser = ConfigParser.ConfigParser()
+		configParser = configparser.ConfigParser()
 		configParser.read(configfile)
 
 		self.tileCoord = configParser.get('tileFiles', 'tileFile')
@@ -716,12 +716,12 @@ class Scheduler(RankedTileGenerator):
 		
 		if altAz_sun.alt.value >= -18.0:
 			localTime = Time(eventTime, format='gps') ## This variable name is incorrect!
-			if verbose: print str(localTime.utc.datetime) + ': Sun above the horizon'
+			if verbose: print(str(localTime.utc.datetime) + ': Sun above the horizon')
 			eventTime = self.advanceToSunset(eventTime, integrationTime)
 			if verbose:
 				localTime = Time(eventTime, format='gps')
-				print 'Advancing time to ' + str(localTime.utc.datetime)
-				print '\n'
+				print('Advancing time to ' + str(localTime.utc.datetime))
+				print('\n')
 
 		
 		while elapsedTime <= duration: 
@@ -730,7 +730,7 @@ class Scheduler(RankedTileGenerator):
 			
 			if altAz_sun.alt.value < -18.0: 
 				if verbose: 
-					print str(localTime.utc.datetime) + ': Observation mode'
+					print(str(localTime.utc.datetime) + ': Observation mode')
 				for jj in np.arange(len(tileIndices)):
 					if tileIndices[jj] not in scheduled:
 						if tileProbs[jj] >= thresholdTileProb:
@@ -748,7 +748,7 @@ class Scheduler(RankedTileGenerator):
 										np.cos(sunMoonAngle))
 							illumination = 0.5*(1.0 + np.cos(phaseAngle))
 							
-							if verbose: print 'Lunar illumination = ' + str(illumination)
+							if verbose: print('Lunar illumination = ' + str(illumination))
 							lunar_illumination.append(illumination)
 							
 							moon_ra.append(Moon.ra.value)
@@ -759,12 +759,12 @@ class Scheduler(RankedTileGenerator):
 			else:
 				if verbose: 
 					localTime = Time(eventTime, format='gps')
-					print str(localTime.utc.datetime) + ': Sun above the horizon'
+					print(str(localTime.utc.datetime) + ': Sun above the horizon')
 				eventTime = self.advanceToSunset(eventTime, integrationTime)
 				if verbose:
 					localTime = Time(eventTime, format='gps')
-					print 'Advancing time to ' + str(localTime.utc.datetime)
-					print '\n'
+					print('Advancing time to ' + str(localTime.utc.datetime))
+					print('\n')
 			
 
 			ii += 1
@@ -772,8 +772,8 @@ class Scheduler(RankedTileGenerator):
 			eventTime += integrationTime
 			elapsedTime += integrationTime
 			if verbose:
-				print 'elapsedTime --->' + str(elapsedTime)
-				print 'observedTime --->' + str(observedTime)
+				print('elapsedTime --->' + str(elapsedTime))
+				print('observedTime --->' + str(observedTime))
 
 
 	
@@ -832,7 +832,7 @@ class Scheduler(RankedTileGenerator):
 		alttiles = []
 		for ii in np.arange(len(scheduled)):
 			tile_obs_times.append(ObsTimes[ii].utc.datetime)
-			if verbose: print str(ObsTimes[ii].utc.datetime) + '\t' + str(int(scheduled[ii]))
+			if verbose: print(str(ObsTimes[ii].utc.datetime) + '\t' + str(int(scheduled[ii])))
 			altAz_tile = self.tiles[int(scheduled[ii])].transform_to(AltAz(obstime=\
 									ObsTimes[ii], location=self.Observatory))
 			alttiles.append(obs_tile_altAz[ii].alt.value)
@@ -958,14 +958,14 @@ def detectability(rank, time_per_tile, total_observation_time,\
 								detection will be output. 
 	'''
 	### Convert to numpy object if scalar supplied
-	if isinstance(time_per_tile, (np.ndarray,)) == False:
+	if isinstance(time_per_tile, np.ndarray) == False:
 		time_per_tile = np.array(time_per_tile)
 	### Check if source tile rank has been reached. Return non-detection if not
 	rank_reached		= (total_observation_time/time_per_tile).astype(int)
 	rank_reached_mask	= rank_reached > rank	# True means rank is reachable
 	if np.all(~rank_reached_mask):	# if rank cannot be reached for 
 									# any integration time	
-		if verbose: print "Tile not reached in ANY allotted observation time"
+		if verbose: print("Tile not reached in ANY allotted observation time")
 		if error_data is not None:
 			return np.zeros(len(time_per_tile))
 		else:
@@ -979,7 +979,7 @@ def detectability(rank, time_per_tile, total_observation_time,\
 	if error_data is None:
 		depthReached = (limmag > apparent_mag)
 		if np.any(depthReached) is False:
-			if verbose: print "Depth not reached in ANY allotted integration time"
+			if verbose: print("Depth not reached in ANY allotted integration time")
 		return np.logical_and(depthReached, rank_reached_mask)
 		### Both Depth criteria and rank criteria should be satisfied
 	### If error_data is supplied, return detection probability
@@ -991,8 +991,8 @@ def detectability(rank, time_per_tile, total_observation_time,\
 		samples = 10**5
 		x = np.linspace(apparent_mag, very_large_number, samples, endpoint = True)
 		### If floats are passed to the function, return the answer rightaway
-		if isinstance(mu, (float, np.float, np.float64,)) == True and\
-		isinstance(sigma, (float, np.float, np.float64,)) == True:
+		if isinstance(mu, (float, np.float, np.float64)) == True and\
+		isinstance(sigma, (float, np.float, np.float64)) == True:
 			y = gaussian_distribution_function(x, mu, sigma)
 			return np.trapz(y,x)
 		# If an array of time_per_tile had been passed

@@ -1,7 +1,7 @@
 import os
 import sys
 import importlib
-from utilities import createTileCenters, preComputeMap
+from .utilities import createTileCenters, preComputeMap
 
 ## append this list with new packages ##
 dependencies = ['argparse', 'astropy', 'healpy', 'scipy']
@@ -12,15 +12,15 @@ for module in dependencies:
 		importlib.import_module(module)
 	except ImportError:
 		count += 1
-		print '\n--- Could not find ' + module + ' ---\n'
+		print('\n--- Could not find ' + module + ' ---\n')
 		continue
-	print '\n*** Found package ' + module + ' ***\n'
+	print('\n*** Found package ' + module + ' ***\n')
 
 if count > 0:
-	print '\nNumber of packages not found = ' + str(count)
+	print('\nNumber of packages not found = ' + str(count))
 	raise Exception('All dependencies are NOT satisfied\n')
 
-print '\n All dependencies are satisfied!\n'
+print('\n All dependencies are satisfied!\n')
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -64,19 +64,19 @@ if nonStandardTelescope + nonStandardResolution:
 		if args.fov:
 			tilefile = createTileCenters.createTileCenters(args.telescope, args.fov)
 		else:
-			print '\nFor non-standard telescopes: ' + str(Telescopes) + ' or nside =/= 256'
-			print 'user must provide a valid FOV for your telescope or provide a tile-center file'
-			print 'use options --fov or --tilefile when running setup.py'
-			print 'Exiting...\n'
+			print('\nFor non-standard telescopes: ' + str(Telescopes) + ' or nside =/= 256')
+			print('user must provide a valid FOV for your telescope or provide a tile-center file')
+			print('use options --fov or --tilefile when running setup.py')
+			print('Exiting...\n')
 			sys.exit(1)
 			
 	
 	### NOTE: Make sure to check for the existence of the tile-pixel map file before calling this function
 	target_nside = args.nside
 	if target_nside not in [64, 128, 256, 512, 1024, 2048]:
-		print '\nValue of nside must be between [64, 2048] and a power of 2 '
-		print 'Please provide a valid nside...'
-		print 'Exiting...\n'
+		print('\nValue of nside must be between [64, 2048] and a power of 2 ')
+		print('Please provide a valid nside...')
+		print('Exiting...\n')
 		sys.exit(1)
 		
 	precomputeFile_new = preComputeMap.preComputeMap(tilefile, args.telescope, target_nside=target_nside) # Create the tile-pixel maps 
@@ -142,12 +142,12 @@ utils = currentDir + '/utilities'
 exportText1 = 'export PYTHONPATH='+ currentDir +':${PYTHONPATH}'
 exportText2 = 'export PYTHONPATH='+ binDir +':${PYTHONPATH}'
 exportText3 = 'export PYTHONPATH='+ utils +':${PYTHONPATH}'
-print '''\n***** sky_tiling is configured *****.
-Run the following in your terminal or put it in your .bashrc'''
-print exportText1
-print exportText2
-print exportText3
-print '\n'
+print('''\n***** sky_tiling is configured *****.
+Run the following in your terminal or put it in your .bashrc''')
+print(exportText1)
+print(exportText2)
+print(exportText3)
+print('\n')
 
 sourceFile = open(args.work + '/sky_tilingrc', 'w')
 sourceFile.writelines(exportText1 + '\n')
@@ -155,7 +155,7 @@ sourceFile.writelines(exportText2 + '\n')
 sourceFile.writelines(exportText3 + '\n')
 os.system('chmod 777 ' + args.work + '/sky_tilingrc')
 
-print 'A copy of source script is put in the work directory: ' + args.work + '/sky_tilingrc'
+print('A copy of source script is put in the work directory: ' + args.work + '/sky_tilingrc')
 
 
 
