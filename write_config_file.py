@@ -53,7 +53,7 @@ currentDir = os.getcwd()
 Telescopes = ['Atlas', 'BlackGEM', 'PS1', 'ZTF'] ## List of 'standard' telescopes 
 
 
-nonStandardResolution = args.nside != 256
+nonStandardResolution = args.nside #!= 256
 
 nonStandardTelescope = args.telescope not in Telescopes
 

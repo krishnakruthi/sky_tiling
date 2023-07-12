@@ -234,7 +234,7 @@ class RankedTileGenerator:
 		return self.df
 
 
-	def plotTiles(self, tileFile=None, FOV=None,resolution=None, tileEdges=False, CI=0.9,
+	def plotTiles(self, FOV=None,resolution=None, tileEdges=False, CI=0.9,
 	       save=False, tag=None, highlight=None, event=None, title=None, size=None):
 		'''
 		METHOD 		:: This method plots the ranked-tiles on a hammer projection
@@ -307,11 +307,9 @@ class RankedTileGenerator:
 			if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=0, markersize=50, alpha=1.0) 
 		else:
 			m.label_meridians(lons, fontsize=12, vnudge=1, halign='left', hnudge=-1) 
-		m.plot(RAP_map, DecP_map, color='y', marker='.', linewidth=0, markersize=3, alpha=0.8) 
-		if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=0, markersize=5, alpha=1.0) 
-# 		if tileFile is None:
-# 			tileFile = self.configParser.get('tileFiles', 'tileFile')
-# 		tileData = np.recfromtxt(tileFile, names=True)
+		m.plot(RAP_map, DecP_map, color='r', marker='.', linewidth=0, markersize=3, alpha=0.8) 
+		if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=1, markersize=5, alpha=1.0) 
+
 		Dec_tile = self.tileData['dec_center']
 		RA_tile = self.tileData['ra_center']
 		ID = self.tileData['ID']
@@ -322,7 +320,7 @@ class RankedTileGenerator:
 		ranked_tile_probs = allTiles_probs_sorted[include_tiles]
 		
 		if save: lw = 4
-		else: lw = 1
+		else: lw = 0.5
 
 		if FOV is None:
 			tileEdges = False
@@ -593,11 +591,13 @@ class Scheduler(RankedTileGenerator):
 		self.skymapfile = skymapFile
 		
 		self.tileObj = RankedTileGenerator(skymapFile, configfile)
-		[self.tileIndices, self.tileProbs] = self.tileObj.getRankedTiles(resolution=256)
+		df_ranked_tiles = self.tileObj.getRankedTiles()
+		self.tileIndices = df_ranked_tiles["tile_index"].values
+		self.tileProbs = df_ranked_tiles["tile_prob"].values
 
-		self.tiles = SkyCoord(ra = self.tileData['ra_center'][self.tileIndices]*u.degree, 
-					    dec = self.tileData['dec_center'][self.tileIndices]*u.degree, 
-					    frame = 'icrs') ### Tile(s)
+		self.tiles = SkyCoord(ra = self.tileData['ra_center'][self.tileIndices.astype(int)]*u.degree, 
+					    dec = self.tileData['dec_center'][self.tileIndices.astype(int)]*u.degree, 
+					    frame = 'icrs') ### Tile(s) ###check thissss plissss
 
 	def tileVisibility(self, t, gps=False):
 		'''
@@ -859,13 +859,13 @@ class Scheduler(RankedTileGenerator):
 		Dec_Moontile = np.deg2rad(self.tileData['dec_center']\
 					  [np.isin(self.tileData['ID'], moonTile)])
 
-		moonTileDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(Dec_Moontile) +\
-					  (np.cos(Dec_scheduled_tile)*np.cos(Dec_Moontile)*\
-					  np.cos(RA_scheduled_tile - RA_Moontile))))
+		# moonTileDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(Dec_Moontile) +\
+		# 			  (np.cos(Dec_scheduled_tile)*np.cos(Dec_Moontile)*\
+		# 			  np.cos(RA_scheduled_tile - RA_Moontile))))
 
-		moonDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(np.deg2rad(moon_decs)) +\
-					  (np.cos(Dec_scheduled_tile)*np.cos(np.deg2rad(moon_decs))*\
-					  np.cos(RA_scheduled_tile - np.deg2rad(moon_ras)))))
+		# moonDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(np.deg2rad(moon_decs)) +\
+		# 			  (np.cos(Dec_scheduled_tile)*np.cos(np.deg2rad(moon_decs))*\
+		# 			  np.cos(RA_scheduled_tile - np.deg2rad(moon_ras)))))
 
 		## Slewing angle computation ##
 		slewDist = [0.0]
