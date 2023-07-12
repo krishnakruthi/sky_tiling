@@ -2,6 +2,7 @@ import os
 import sys
 import importlib
 from utilities import createTileCenters, preComputeMap
+from setuptools import setup, find_packages
 
 ## append this list with new packages ##
 dependencies = ['argparse', 'astropy', 'healpy', 'scipy']
@@ -107,7 +108,7 @@ time_magnitude_line = 'time_magnitude = ' + args.timemag
 
 
 os.system('mkdir -p ' + args.work)
-configFile = open(args.work + '/config.ini', 'w')
+configFile = open(args.work + args.telescope +'/config.ini', 'w')
 
 configFile.writelines('[pixelTileMap]\n')
 configFile.writelines(preComputed_64_line + '\n')
@@ -136,29 +137,33 @@ configFile.close()
 # 	os.system('cp tile_pixel_maps/*.dat ' + args.path + '/.')
 
 
-binDir = currentDir + '/bin'
-utils = currentDir + '/utilities'
+# binDir = currentDir + '/bin'
+# utils = currentDir + '/utilities'
 
-exportText1 = 'export PYTHONPATH='+ currentDir +':${PYTHONPATH}'
-exportText2 = 'export PYTHONPATH='+ binDir +':${PYTHONPATH}'
-exportText3 = 'export PYTHONPATH='+ utils +':${PYTHONPATH}'
-print('''\n***** sky_tiling is configured *****.
-Run the following in your terminal or put it in your .bashrc''')
-print(exportText1)
-print(exportText2)
-print(exportText3)
-print('\n')
+# exportText1 = 'export PYTHONPATH='+ currentDir +':${PYTHONPATH}'
+# exportText2 = 'export PYTHONPATH='+ binDir +':${PYTHONPATH}'
+# exportText3 = 'export PYTHONPATH='+ utils +':${PYTHONPATH}'
+# print('''\n***** sky_tiling is configured *****.
+# Run the following in your terminal or put it in your .bashrc''')
+# print(exportText1)
+# print(exportText2)
+# print(exportText3)
+# print('\n')
 
-sourceFile = open(args.work + '/sky_tilingrc', 'w')
-sourceFile.writelines(exportText1 + '\n')
-sourceFile.writelines(exportText2 + '\n')
-sourceFile.writelines(exportText3 + '\n')
-os.system('chmod 777 ' + args.work + '/sky_tilingrc')
+# sourceFile = open(args.work + '/sky_tilingrc', 'w')
+# sourceFile.writelines(exportText1 + '\n')
+# sourceFile.writelines(exportText2 + '\n')
+# sourceFile.writelines(exportText3 + '\n')
+# os.system('chmod 777 ' + args.work + '/sky_tilingrc')
 
-print('A copy of source script is put in the work directory: ' + args.work + '/sky_tilingrc')
+# print('A copy of source script is put in the work directory: ' + args.work + '/sky_tilingrc')
 
 
 
+setup(name="sky_tiling",
+      version="0.1",
+      packages=find_packages(), 
+      )
 
 
 
