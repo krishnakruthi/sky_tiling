@@ -155,7 +155,7 @@ configFile.close()
 # sourceFile.writelines(exportText3 + '\n')
 # os.system('chmod 777 ' + args.work + '/sky_tilingrc')
 
-# print('A copy of source script is put in the work directory: ' + args.work + '/sky_tilingrc')
+print('The config file is put in the work directory: ' + args.work + args.telescope +'_config.ini')
 
 
 
