@@ -772,116 +772,68 @@ class Scheduler(RankedTileGenerator):
 			if verbose:
 				print('elapsedTime --->' + str(elapsedTime))
 				print('observedTime --->' + str(observedTime))
-
-
-	
-# 		while observedTime <= duration:
-# 		while elapsedTime <= duration: 
-# 			print 'Observed time = ' + str(observedTime/3600.)
-# 			dt = integrationTime * ii
-# 			elapsedTime += integrationTime
-# 			print '**** Elapsed time = ' + str(elapsedTime) + '****'
-# 			[tileIndices, tileProbs, altAz_sun] = self.tileVisibility(eventTime,
-# 																		 gps=True)
-# 			
-# 
-# 			
-# 			if altAz_sun.alt.value < -18.0: ### Sun below horizon
-# 				observed_count += 1
-# 				observedTime += integrationTime ### Augment observed time
-# 				if verbose: 
-# 					print str(localTime.utc.datetime) + ': Observation mode'
-# 
-# 				for jj in np.arange(len(tileIndices)):
-# 					if tileIndices[jj] not in scheduled:
-# 						if tileProbs[jj] > thresholdTileProb:
-# 							scheduled = np.append(scheduled, tileIndices[jj])
-# 							ObsTimes.append(localTime)
-# 							pVal_observed.append(tileProbs[jj])
-# 							Sun = get_sun(Time(eventTime, format='gps'))
-# 							sun_ra.append(Sun.ra.value)
-# 							sun_dec.append(Sun.dec.value)
-# 							Moon = get_moon(Time(eventTime, format='gps'))
-# 							sunMoonAngle = Sun.separation(Moon)
-# 							phaseAngle = np.arctan2(Sun.distance*np.sin(sunMoonAngle), 
-# 										Moon.distance - Sun.distance *
-# 										np.cos(sunMoonAngle))
-# 							illumination = 0.5*(1.0 + np.cos(phaseAngle))
-# 							
-# 							if verbose: print 'Lunar illumination = ' + str(illumination)
-# 							lunar_illumination.append(illumination)
-# 							
-# 							moon_ra.append(Moon.ra.value)
-# 							moon_dec.append(Moon.dec.value)
-# 							break
-# 
-# 			else:
-# 				if verbose: 
-# 					print str(localTime.utc.datetime) + ': Sun above the horizon'
-# 				eventTime = self.advanceToSunset(eventTime, integrationTime)
-# 				if verbose:
-# 					print 'Advancing time to ' + str(localTime.utc.datetime)
-# 					print '\n'
-
-
-
-		tile_obs_times = []
-		airmass = []
-		alttiles = []
-		for ii in np.arange(len(scheduled)):
-			tile_obs_times.append(ObsTimes[ii].utc.datetime)
-			if verbose: print(str(ObsTimes[ii].utc.datetime) + '\t' + str(int(scheduled[ii])))
-			altAz_tile = self.tiles[int(scheduled[ii])].transform_to(AltAz(obstime=\
-									ObsTimes[ii], location=self.Observatory))
-			alttiles.append(obs_tile_altAz[ii].alt.value)
-			airmass.append(obs_tile_altAz[ii].secz)
+				
+		if np.any(scheduled) == False: 
+			print("The input tiles are not visible from the given site")
 		
-		pVal_observed = np.array(pVal_observed)
-		sun_ra = np.array(sun_ra)
-		sun_dec = np.array(sun_dec)
-		moon_ras = np.array(moon_ra)
-		moon_decs = np.array(moon_dec)
-		moonTile = []
-		for moon_ra, moon_dec in zip(moon_ras, moon_decs):
-			moonTile.append(self.tileObj.sourceTile(moon_ra, moon_dec))
+		else: 
+			tile_obs_times = []
+			airmass = []
+			alttiles = []
+			for ii in np.arange(len(scheduled)):
+				tile_obs_times.append(ObsTimes[ii].utc.datetime)
+				if verbose: print(str(ObsTimes[ii].utc.datetime) + '\t' + str(int(scheduled[ii])))
+				altAz_tile = self.tiles[int(scheduled[ii])].transform_to(AltAz(obstime=\
+										ObsTimes[ii], location=self.Observatory))
+				alttiles.append(obs_tile_altAz[ii].alt.value)
+				airmass.append(obs_tile_altAz[ii].secz)
+			
+			pVal_observed = np.array(pVal_observed)
+			sun_ra = np.array(sun_ra)
+			sun_dec = np.array(sun_dec)
+			moon_ras = np.array(moon_ra)
+			moon_decs = np.array(moon_dec)
+			moonTile = []
+			for moon_ra, moon_dec in zip(moon_ras, moon_decs):
+				moonTile.append(self.tileObj.sourceTile(moon_ra, moon_dec))
 
-		alttiles = np.array(alttiles)
-		moonTile = np.array(moonTile)
-		
-		## Angular separation = arccos(sin(dec1)*sin(dec2) + (cos(dec1)*cos(dec2)*cos(ra1 - ra2))
-		self.tileData['ID']
-		RA_scheduled_tile = np.deg2rad(self.tileData['ra_center']\
-							[np.isin(self.tileData['ID'], scheduled.astype('int'))])
-		Dec_scheduled_tile = np.deg2rad(self.tileData['dec_center']\
-							[np.isin(self.tileData['ID'], scheduled.astype('int'))])
-		RA_Moontile = np.deg2rad(self.tileData['ra_center']\
-					  [np.isin(self.tileData['ID'], moonTile)])
-		Dec_Moontile = np.deg2rad(self.tileData['dec_center']\
-					  [np.isin(self.tileData['ID'], moonTile)])
+			alttiles = np.array(alttiles)
+			moonTile = np.array(moonTile)
+			
+			## Angular separation = arccos(sin(dec1)*sin(dec2) + (cos(dec1)*cos(dec2)*cos(ra1 - ra2))
+			self.tileData['ID']
+			RA_scheduled_tile = np.deg2rad(self.tileData['ra_center']\
+								[np.isin(self.tileData['ID'], scheduled.astype('int'))])
+			Dec_scheduled_tile = np.deg2rad(self.tileData['dec_center']\
+								[np.isin(self.tileData['ID'], scheduled.astype('int'))])
+			RA_Moontile = np.deg2rad(self.tileData['ra_center']\
+							[np.isin(self.tileData['ID'], moonTile)])
+			Dec_Moontile = np.deg2rad(self.tileData['dec_center']\
+							[np.isin(self.tileData['ID'], moonTile)])
 
-		# moonTileDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(Dec_Moontile) +\
-		# 			  (np.cos(Dec_scheduled_tile)*np.cos(Dec_Moontile)*\
-		# 			  np.cos(RA_scheduled_tile - RA_Moontile))))
+			# moonTileDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(Dec_Moontile) +\
+			# 			  (np.cos(Dec_scheduled_tile)*np.cos(Dec_Moontile)*\
+			# 			  np.cos(RA_scheduled_tile - RA_Moontile))))
 
-		# moonDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(np.deg2rad(moon_decs)) +\
-		# 			  (np.cos(Dec_scheduled_tile)*np.cos(np.deg2rad(moon_decs))*\
-		# 			  np.cos(RA_scheduled_tile - np.deg2rad(moon_ras)))))
+			# moonDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(np.deg2rad(moon_decs)) +\
+			# 			  (np.cos(Dec_scheduled_tile)*np.cos(np.deg2rad(moon_decs))*\
+			# 			  np.cos(RA_scheduled_tile - np.deg2rad(moon_ras)))))
 
-		## Slewing angle computation ##
-		slewDist = [0.0]
-		for ii in range(1, len(tile_obs_times)):
-			slewDist.append(np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile[ii])*np.sin(Dec_scheduled_tile[ii-1]) +\
-					  (np.cos(Dec_scheduled_tile[ii])*np.cos(Dec_scheduled_tile[ii-1])*\
-					  np.cos(RA_scheduled_tile[ii] - RA_scheduled_tile[ii-1])))))
+			## Slewing angle computation ##
+			slewDist = [0.0]
+			for ii in range(1, len(tile_obs_times)):
+				slewDist.append(np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile[ii])*np.sin(Dec_scheduled_tile[ii-1]) +\
+							(np.cos(Dec_scheduled_tile[ii])*np.cos(Dec_scheduled_tile[ii-1])*\
+							np.cos(RA_scheduled_tile[ii] - RA_scheduled_tile[ii-1])))))
 
 
-		slewDist = np.array(slewDist)
-		df = pd.DataFrame(np.vstack((tile_obs_times, scheduled.astype('int'), pVal_observed, slewDist,\
-									 airmass, moonTile, lunar_illumination)).T,\
-									 columns=['Observation_Time', 'Tile_Index', 'Tile_Probs', 'Slew Angle (deg)',\
-									 'Air_Mass', 'Lunar-tile', \
-									 'Lunar_Illumination'])
-		return df
+			slewDist = np.array(slewDist)
+			df = pd.DataFrame(np.vstack((tile_obs_times, scheduled.astype('int'), pVal_observed, slewDist,\
+											airmass, moonTile, lunar_illumination)).T,\
+											columns=['Observation_Time', 'Tile_Index', 'Tile_Probs', 'Slew Angle (deg)',\
+											'Air_Mass', 'Lunar-tile', \
+											'Lunar_Illumination'])
+			return df
 
 
 
