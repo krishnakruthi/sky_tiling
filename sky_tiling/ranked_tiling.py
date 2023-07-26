@@ -363,7 +363,7 @@ class RankedTileGenerator:
 				m.plot([RAP1, RAP2], [DecP1, DecP2],'k-', linewidth=lw, alpha=alpha) 
 				m.plot([RAP2, RAP4], [DecP2, DecP4],'k-', linewidth=lw, alpha=alpha) 
 				m.plot([RAP4, RAP3], [DecP4, DecP3],'k-', linewidth=lw, alpha=alpha) 
-				m.plot([RAP3, RAP1], [DecP3, DecP1],'k-', linewidth=lw, alpha=alpha) 
+				m.plot([RAP3, RAP1], [DecP3, DecP1],'k-', linewidth=lw, alpha=alpha)
 
 			else:
 				m.plot(RAP_peak, DecP_peak, 'ko', markersize=lw, mew=1, alpha=alpha)

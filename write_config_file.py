@@ -50,7 +50,7 @@ args, unknown = parser.parse_known_args()
 
 currentDir = os.getcwd()
 
-Telescopes = ['Atlas', 'BlackGEM', 'PS1', 'ZTF'] ## List of 'standard' telescopes 
+Telescopes = ['ATLAS', 'BlackGEM', 'PS1', 'ZTF'] ## List of 'standard' telescopes 
 
 
 nonStandardResolution = args.nside #!= 256
@@ -105,7 +105,7 @@ extension_line = 'extension = ' + args.extension
 site_line = 'site = ' + args.site
 time_magnitude_line = 'time_magnitude = ' + args.timemag
 
-
+args.work = os.path.join(args.work, "")
 os.system('mkdir -p ' + args.work)
 configFile = open(args.work + args.telescope +'_config.ini', 'w')
 

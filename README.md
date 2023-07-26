@@ -19,7 +19,7 @@ The main ranked-tiling code is supposed to be used as a module. You can write "c
 
   (*)  --work      : The name of the working directory. The configuration script will be created here.
   
-  (*) --telescope : The name of the telescope. Currently **ATLAS, BlackGEM, Pan Starrs and ZTF** are the standard telescopes. If the user uses one of these names, then the script uses the existing predefined tile-center files to compute the ranked tiles.
+  (*) --telescope : The name of the telescope. Currently **ATLAS, BlackGEM, PS1 and ZTF** are the standard telescopes. If the user uses one of these names, then the script uses the existing predefined tile-center files to compute the ranked tiles.
   
   (*) --nside     : This is the resoution of the sky-map that is to be used. Values of nside is in powers of 2. Use values in range of 64 to 2048. The default value is nside=256. If the user uses one of the standard telescopes (see --telescope) in conjunction with the --nside=256 (alternatively doesn't use this option), then the ranked tiling script will be using the existing tile-pixel map (see below for details on this maping) to construct the ranked-tiles. If the user chooses to use a different nside value or uses a non-standard telescope name, then this map needs to be created, which is done by the  script.
   
