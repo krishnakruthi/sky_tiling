@@ -584,7 +584,8 @@ class Scheduler(RankedTileGenerator):
 		configParser.read(configfile)
 
 		self.tileCoord = configParser.get('tileFiles', 'tileFile')
-		site = configParser.get('observation', 'site')
+		if site is None:
+			site = configParser.get('observation', 'site')
 
 		self.Observatory = EarthLocation.of_site(site)
 		self.tileData = np.recfromtxt(self.tileCoord, names=True)

@@ -63,6 +63,7 @@ if nonStandardTelescope + nonStandardResolution:
 	else: # If not, then create the file, FOV is required
 		if args.fov:
 			tilefile = createTileCenters.createTileCenters(args.telescope, args.fov)
+			print('\nTile center file created!\n')
 		else:
 			print('\nFor non-standard telescopes: ' + str(Telescopes) + ' or nside =/= 256')
 			print('user must provide a valid FOV for your telescope or provide a tile-center file')
