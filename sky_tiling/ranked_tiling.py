@@ -578,16 +578,20 @@ class Scheduler(RankedTileGenerator):
 	the second should be the tile center's ra value and the third the dec value of the 
 	same. The utcoffset is the time difference between UTC and the site in hours. 
 	'''
-	def __init__(self, skymapFile, configfile, site=None):
+	def __init__(self, skymapFile, configfile, astropy_site_location=None):
 
 		configParser = configparser.ConfigParser()
 		configParser.read(configfile)
 
 		self.tileCoord = configParser.get('tileFiles', 'tileFile')
-		if site is None:
-			site = configParser.get('observation', 'site')
 
-		self.Observatory = EarthLocation.of_site(site)
+		if astropy_site_location is not None:
+			self.Observatory = astropy_site_location
+		
+		else:
+			site = configParser.get('observation', 'site')
+			self.Observatory = EarthLocation.of_site(site)
+		
 		self.tileData = np.recfromtxt(self.tileCoord, names=True)
 		self.skymapfile = skymapFile
 		
