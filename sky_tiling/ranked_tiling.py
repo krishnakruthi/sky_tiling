@@ -748,7 +748,8 @@ class Scheduler(RankedTileGenerator):
 				
 		if np.any(scheduled) == False: 
 			print("The input tiles are not visible from the given site")
-		
+			return None
+
 		else: 
 			tile_obs_times = []
 			airmass = []
