@@ -113,9 +113,6 @@ class RankedTileGenerator:
 			      2  	76.142860	-85.938460
 			      ...
 		'''
-# 		if tileFile is None:
-# 			tileFile = self.configParser.get('tileFiles', 'tileFile')
-# 		tileData = np.recfromtxt(tileFile, names=True)
 
 		Dec_tile = self.tileData['dec_center']
 		RA_tile =  self.tileData['ra_center']
@@ -216,7 +213,6 @@ class RankedTileGenerator:
 		tile_index = np.arange(len(data))
 		skymapUD = hp.ud_grade(self.skymap, resolution, power=-2)
 		npix = len(skymapUD)
-		# theta, phi = hp.pix2ang(resolution, np.arange(0, npix))
 		pVal = skymapUD[np.arange(0, npix)]
 
 		allTiles_probs = []
@@ -435,33 +431,6 @@ class RankedTileGenerator:
 		
 		return [ranked_galaxies, galaxy_probs]
 
-	### Older version ###	
-
-# 	def integrationTime(self, T_obs, pValTiles=None):
-# 		'''
-# 		METHOD :: This method accepts the probability values of the ranked tiles, the 
-# 			  total observation time and the rank of the source tile. It returns 
-# 			  the array of time to be spent in each tile which is determined based
-# 			  on the localizaton probability of the tile. 
-# 				  
-# 		pValTiles :: The probability value of the ranked tiles. Obtained from getRankedTiles 
-# 					 output
-# 		T_obs     :: Total observation time available for the follow-up.
-# 		'''
-# 		if pValTiles is None:
-# 			pValTiles = self.allTiles_probs_sorted
-# 		
-# 		fpValTiles = pValTiles ### If we need to modify the probability weight.
-# 		modified_prob = fpValTiles/np.sum(fpValTiles)
-# 		t_tiles = modified_prob * T_obs ### Time spent in each tile if not constrained
-# 		t_tiles[t_tiles > 1200.0] = 1200.0 ### Upper limit of exposure time
-# 		t_tiles[t_tiles < 60] = 60.0 ### Lower limit of exposure time
-# 		Obs = np.cumsum(t_tiles) <= T_obs ### Tiles observable in T_obs seconds
-# 		time_per_tile = t_tiles[Obs] ### Actual time spent per tile
-# 		
-# 		return time_per_tile
-		
-
 
 	def getSamplesInTiles(self, samples):
 		'''
@@ -609,7 +578,7 @@ class Scheduler(RankedTileGenerator):
 		METHOD	:: This method takes as input the time (gps or mjd) of observation
 				   and the observatory site name, and returns the alt and az of the 
 				   ranked tiles. It also returns the alt and az of the sun.
-		t	    :: The time at which observation is made. Default is mjd. If time is 
+			  t	:: The time at which observation is made. Default is mjd. If time is 
 				   given in gps then set gps to True.
 
 		'''
@@ -618,10 +587,10 @@ class Scheduler(RankedTileGenerator):
 		altAz_tile = self.tiles.transform_to(AltAz(obstime=time, location=self.Observatory))
 		altAz_sun = get_sun(time).transform_to(AltAz(obstime=time, location=self.Observatory))
 		
-		isSunDown = altAz_sun.alt.value < -18.0 ### Checks if it is past twilight.
+		#isSunDown = altAz_sun.alt.value < -18.0 ### Checks if it is past twilight.
 		whichTilesUp = altAz_tile.alt.value > 20.0  ### Checks which tiles are up		
 		
-# 		return [altAz_tile, self.tileProbs, altAz_sun]
+        #return [altAz_tile, self.tileProbs, altAz_sun]
 		return [self.tileIndices[whichTilesUp], self.tileProbs[whichTilesUp], altAz_tile[whichTilesUp], altAz_sun]
 		
 
@@ -640,7 +609,6 @@ class Scheduler(RankedTileGenerator):
 		dt = np.arange(0, 24*3600 + intTime, intTime)
 		time = Time(eventTime + dt, format='gps')
 		altAz_sun = get_sun(time).transform_to(AltAz(obstime=time, location=self.Observatory))
-# 		print altAz_sun.alt
 		timeBeforeSunset = (eventTime + dt)[altAz_sun.alt.value < -18.0][0]
 		return timeBeforeSunset
 
@@ -654,8 +622,8 @@ class Scheduler(RankedTileGenerator):
 		index		::	The index of the tile for which setting tile is to be found
 		currentTime	::	The current time when this tile is scheduled
 		'''
-# 		if gps: time = Time(currentTime, format='gps')
-# 		else: time = Time(currentTime, format='mjd')
+		# if gps: time = Time(currentTime, format='gps')
+		# else: time = Time(currentTime, format='mjd')
 		thisTile = SkyCoord(ra = self.tileData['ra_center'][index]*u.degree, 
 					    dec = self.tileData['dec_center'][index]*u.degree, 
 					    frame = 'icrs') ### Tile(s)
