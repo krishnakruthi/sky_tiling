@@ -37,10 +37,13 @@ import pandas as pd
 import healpy as hp
 import configparser
 from scipy import interpolate
+import pylab as pl
 
 from astropy import units as u
 from astropy.table import Table
 from astropy.utils.console import ProgressBar
+from .utilities import AllSkyMap_basic
+
 
 
 def getTileBounds(FOV, ra_cent, dec_cent):
@@ -251,9 +254,6 @@ class RankedTileGenerator:
 		size		:: (Optional) Size of the plot if plot show option is used
 		'''			
 
-		from .utilities import AllSkyMap_basic
-		import pylab as pl
-
 		ranked_tile_indices = self.df["tile_index"]
 		allTiles_probs_sorted = self.df["tile_prob"]
 
@@ -365,7 +365,7 @@ class RankedTileGenerator:
 			extension = self.configParser.get('plot', 'extension')
 			if tag is None: 
 				tag = self.configParser.get('plot', 'filenametag')
-			pl.savefig(self.outdir + tag + '_skyTiles_' + '.' + extension)
+			pl.savefig(self.outdir + tag + '_skyTiles' + '.' + extension)
 
 		else:
 			pl.show()
