@@ -37,7 +37,7 @@ import pandas as pd
 import healpy as hp
 import configparser
 from scipy import interpolate
-import pylab as pl
+import matplotlib.pyplot as plt
 
 from astropy import units as u
 from astropy.table import Table
@@ -231,7 +231,7 @@ class RankedTileGenerator:
 
 
 	def plotTiles(self, FOV=None,resolution=None, tileEdges=False, CI=0.9,
-	       save_plot=False, tag=None, highlight=None, event=None, title=None, size=None):
+	       save_plot=False, tag=None, highlight=None, event=None, title=None, fig=None):
 		'''
 		METHOD 		:: This method plots the ranked-tiles on a hammer projection
 				       skymap. 
@@ -276,17 +276,12 @@ class RankedTileGenerator:
 		dec_CI = dec[include]
 		# pVal_CI = pVal[include]
 
-		if not size:
-			size=(8, 5)
-		if save_plot:
-			pl.figure(figsize=(60,40))
-			pl.rcParams.update({'font.size': 60})
-		else:
-			pl.rcParams.update({'font.size': 12})
-			pl.figure(figsize=size)
+		if fig is None:
+			fig = plt.figure(figsize=(8, 5))
 
 		if title:
-			pl.title(title)
+			plt.title(title)
+		
 		m = AllSkyMap_basic.AllSkyMap(projection='hammer')
 		RAP_map, DecP_map = m(ra_CI, dec_CI)
 		if event: RAP_event, DecP_event = m(event[0], event[1])
@@ -297,13 +292,8 @@ class RankedTileGenerator:
 		lons = np.arange(-150,151,30)
 
 		m.plot(RAP_map, DecP_map, color='r', marker='.', linewidth=0, markersize=3, alpha=0.8) 
-
-		if save_plot:
-			m.label_meridians(lons, fontsize=60, vnudge=1, halign='left', hnudge=-1)
-			if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=0, markersize=50, alpha=1.0) 
-		else:
-			m.label_meridians(lons, fontsize=12, vnudge=1, halign='left', hnudge=-1)
-			if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=1, markersize=5, alpha=1.0)
+		m.label_meridians(lons, fontsize=12, vnudge=1, halign='left', hnudge=-1)
+		if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=1, markersize=5, alpha=1.0)
 
 		Dec_tile = self.tileData['dec_center']
 		RA_tile = self.tileData['ra_center']
@@ -311,14 +301,12 @@ class RankedTileGenerator:
 		include_tiles = np.cumsum(allTiles_probs_sorted) < CI
 		include_tiles[np.sum(include_tiles)] = True
 		ranked_tile_indices = ranked_tile_indices[include_tiles]
-		
-		if save_plot: lw = 4
-		else: lw = 0.5
 
 		if FOV is None:
 			tileEdges = False
 
 		alpha=1.0
+		lw=0.5
 		if highlight:
 			alpha = 0.2
 		if highlight:
@@ -365,10 +353,10 @@ class RankedTileGenerator:
 			extension = self.configParser.get('plot', 'extension')
 			if tag is None: 
 				tag = self.configParser.get('plot', 'filenametag')
-			pl.savefig(self.outdir + tag + '_skyTiles' + '.' + extension)
+			plt.savefig(self.outdir + tag + '_skyTiles' + '.' + extension)
 
 		else:
-			pl.show()
+			return fig
 
 
 	def rankGalaxies2D(self, catalog, resolution=None):
