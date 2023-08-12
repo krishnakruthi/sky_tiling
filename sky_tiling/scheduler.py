@@ -225,7 +225,7 @@ class Scheduler(RankedTileGenerator):
 			else:
 				if verbose: 
 					localTime = Time(eventTime, format='gps')
-					print("Epoch completed! Observed for "+str(observedTime)+" hrs.")
+					print("Epoch completed!")
 					print(str(localTime.utc.datetime) + ': Sun above the horizon')
 				eventTime = self.advanceToSunset(eventTime, integrationTime)
 				if verbose:
@@ -271,7 +271,7 @@ class Scheduler(RankedTileGenerator):
 			moonTile = np.array(moonTile)
 			
 			## Angular separation = arccos(sin(dec1)*sin(dec2) + (cos(dec1)*cos(dec2)*cos(ra1 - ra2))
-			self.tileData['ID']
+			
 			RA_scheduled_tile = np.deg2rad(self.tileData['ra_center']\
 								[np.isin(self.tileData['ID'], scheduled.astype('int'))])
 			Dec_scheduled_tile = np.deg2rad(self.tileData['dec_center']\
