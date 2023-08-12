@@ -187,7 +187,6 @@ class Scheduler(RankedTileGenerator):
 			if verbose:
 				localTime = Time(eventTime, format='gps')
 				print('Scheduling observations starting: ' + str(localTime.utc.datetime))
-				print('\n')
 
 		
 		while elapsedTime <= duration: 
@@ -231,11 +230,8 @@ class Scheduler(RankedTileGenerator):
 				if verbose:
 					localTime = Time(eventTime, format='gps')
 					print('Advancing time to ' + str(localTime.utc.datetime))
-					print('\n')
-			
 
 			ii += 1
-
 			eventTime += integrationTime
 			elapsedTime += integrationTime
 			# if verbose:
