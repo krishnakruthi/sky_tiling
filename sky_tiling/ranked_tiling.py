@@ -213,9 +213,11 @@ class RankedTileGenerator:
 		allTiles_probs = np.array(allTiles_probs)
 		index = np.argsort(-allTiles_probs)
 
+		Dec_tile = self.tileData['dec_center']
+		RA_tile = self.tileData['ra_center']
 		allTiles_probs_sorted = allTiles_probs[index]
 		tile_index_sorted = tile_index[index]
-		self.df = pd.DataFrame({"tile_index": tile_index_sorted, "tile_prob":allTiles_probs_sorted})
+		self.df = pd.DataFrame({"tile_index": tile_index_sorted, "RA": RA_tile[index], "Dec": Dec_tile[index], "tile_prob" : allTiles_probs_sorted})
 
 		if save_csv:
 			if tag is None: 
@@ -272,7 +274,7 @@ class RankedTileGenerator:
 		include[np.sum(include)] = True
 		ra_CI = ra[include]
 		dec_CI = dec[include]
-		pVal_CI = pVal[include]
+		# pVal_CI = pVal[include]
 
 		if not size:
 			size=(8, 5)
@@ -297,18 +299,18 @@ class RankedTileGenerator:
 			m.label_meridians(lons, fontsize=60, vnudge=1, halign='left', hnudge=-1)
 			if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=0, markersize=50, alpha=1.0) 
 		else:
-			m.label_meridians(lons, fontsize=12, vnudge=1, halign='left', hnudge=-1) 
+			m.label_meridians(lons, fontsize=12, vnudge=1, halign='left', hnudge=-1)
+			if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=1, markersize=5, alpha=1.0)
+
 		m.plot(RAP_map, DecP_map, color='r', marker='.', linewidth=0, markersize=3, alpha=0.8) 
-		if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=1, markersize=5, alpha=1.0) 
+
 
 		Dec_tile = self.tileData['dec_center']
 		RA_tile = self.tileData['ra_center']
-		ID = self.tileData['ID']
 		
 		include_tiles = np.cumsum(allTiles_probs_sorted) < CI
 		include_tiles[np.sum(include_tiles)] = True
 		ranked_tile_indices = ranked_tile_indices[include_tiles]
-		ranked_tile_probs = allTiles_probs_sorted[include_tiles]
 		
 		if save_plot: lw = 4
 		else: lw = 0.5
@@ -367,11 +369,6 @@ class RankedTileGenerator:
 
 		else:
 			pl.show()
-		
-		ranks = np.arange(1, len(ranked_tile_indices)+1)
-		output = np.vstack((ranks, ranked_tile_indices, RA_tile[ranked_tile_indices.astype(int)], Dec_tile[ranked_tile_indices.astype(int)], ranked_tile_probs)).T
-		t = Table(rows=output, names=('Rank', 'index', 'RA', 'Dec', 'Probability'), dtype=('i4', 'i4', 'f8', 'f8', 'f8'))
-		return t 
 
 
 	def rankGalaxies2D(self, catalog, resolution=None):
@@ -515,11 +512,11 @@ class RankedTileGenerator:
 			pValTiles = self.allTiles_probs_sorted
 		kappa_sum = []		
 		for aa in AA:
-# 			time_per_tile = self.integrationTime(T, pValTiles, func='x + ' + str(aa))
+			# time_per_tile = self.integrationTime(T, pValTiles, func='x + ' + str(aa))
 			time_per_tile = self.integrationTime(T, pValTiles, func='x**' + str(aa))
 			limmag = s(np.log(time_per_tile))
 			dists = 10**(1.0 + (limmag - M)/5)
-# 			kappas = (dists**3)*pValTiles[:len(dists)]
+			#kappas = (dists**3)*pValTiles[:len(dists)]
 			kappas = limmag*pValTiles[:len(dists)]
 			kappa_sum.append(np.sum(kappas))
 		kappa_sum = np.array(kappa_sum)
