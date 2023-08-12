@@ -69,13 +69,14 @@ def getTileBounds(FOV, ra_cent, dec_cent):
 
 class RankedTileGenerator:
 		
-	def __init__(self, skymapfile, configfile, tileFile=None):
+	def __init__(self, skymapfile, configfile, tileFile=None, outdir=None):
 		'''
 		skymapfile :: The GW sky-localization map for the event
 		path	   :: Path to the preCoputed files
 		preComputeFiles  :: A list of all the precompute files
 		'''
 		
+		self.outdir = outdir
 		self.configParser = configparser.ConfigParser()
 		self.configParser.read(configfile)
 
@@ -128,7 +129,7 @@ class RankedTileGenerator:
 		return ID[index] - 1 ### Since the indexing begins with 1.
 
 	
-	def searchedArea(self, ra, dec, resolution=None, verbose=False):
+	def searchedArea(self, ra, dec, resolution=None, verbose=True):
 		'''
 		METHOD     :: This method takes the position of the injected 
 			      event and the sky-map. It returns the searched 
@@ -181,7 +182,7 @@ class RankedTileGenerator:
 		return [searchedArea, coveredProb]
 
 	
-	def getRankedTiles(self, resolution=None, verbose=False):
+	def getRankedTiles(self, resolution=None, verbose=True, save_csv=False, tag=None):
 		'''
 		METHOD		:: This method returns two numpy arrays, the first
 				   contains the tile indices of telescope and the second
@@ -226,12 +227,17 @@ class RankedTileGenerator:
 		allTiles_probs_sorted = allTiles_probs[index]
 		tile_index_sorted = tile_index[index]
 		self.df = pd.DataFrame({"tile_index": tile_index_sorted, "tile_prob":allTiles_probs_sorted})
+
+		if save_csv:
+			if tag is None: 
+				tag = self.configParser.get('plot', 'filenametag')
+			self.df.to_csv(self.outdir+tag+"_ranked_tiles.csv")
 		
 		return self.df
 
 
 	def plotTiles(self, FOV=None,resolution=None, tileEdges=False, CI=0.9,
-	       save=False, tag=None, highlight=None, event=None, title=None, size=None):
+	       save_plot=False, tag=None, highlight=None, event=None, title=None, size=None):
 		'''
 		METHOD 		:: This method plots the ranked-tiles on a hammer projection
 				       skymap. 
@@ -281,7 +287,7 @@ class RankedTileGenerator:
 
 		if not size:
 			size=(8, 5)
-		if save:
+		if save_plot:
 			pl.figure(figsize=(60,40))
 			pl.rcParams.update({'font.size': 60})
 		else:
@@ -298,7 +304,7 @@ class RankedTileGenerator:
 		m.drawmeridians(np.arange(0.,420.,30.), color='grey')
 		m.drawmapboundary(fill_color='white')
 		lons = np.arange(-150,151,30)
-		if save:
+		if save_plot:
 			m.label_meridians(lons, fontsize=60, vnudge=1, halign='left', hnudge=-1)
 			if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=0, markersize=50, alpha=1.0) 
 		else:
@@ -315,7 +321,7 @@ class RankedTileGenerator:
 		ranked_tile_indices = ranked_tile_indices[include_tiles]
 		ranked_tile_probs = allTiles_probs_sorted[include_tiles]
 		
-		if save: lw = 4
+		if save_plot: lw = 4
 		else: lw = 0.5
 
 		if FOV is None:
@@ -364,12 +370,12 @@ class RankedTileGenerator:
 			else:
 				m.plot(RAP_peak, DecP_peak, 'ko', markersize=lw, mew=1, alpha=alpha)
 
-		if save:
-			filenametag = self.configParser.get('plot', 'filenametag')
-			if tag: filenametag = filenametag + '_' + tag
+		if save_plot:
 			extension = self.configParser.get('plot', 'extension')
-			pl.savefig('skyTiles_' + filenametag + '.' + extension)
-		
+			if tag is None: 
+				tag = self.configParser.get('plot', 'filenametag')
+			pl.savefig(self.outdir + tag + '_skyTiles_' + '.' + extension)
+
 		else:
 			pl.show()
 		
@@ -547,12 +553,13 @@ class Scheduler(RankedTileGenerator):
 	the second should be the tile center's ra value and the third the dec value of the 
 	same. The utcoffset is the time difference between UTC and the site in hours. 
 	'''
-	def __init__(self, skymapFile, configfile, astropy_site_location=None):
+	def __init__(self, skymapFile, configfile, astropy_site_location=None, outdir=None):
 
 		configParser = configparser.ConfigParser()
 		configParser.read(configfile)
 
 		self.tileCoord = configParser.get('tileFiles', 'tileFile')
+		self.outdir = outdir
 
 		if astropy_site_location is not None:
 			self.Observatory = astropy_site_location
@@ -640,7 +647,7 @@ class Scheduler(RankedTileGenerator):
 		return setTime
 
 	def observationSchedule(self, duration, eventTime, integrationTime=120, CI=0.9,
-							observedTiles=None, plot=False, verbose=False):
+							observedTiles=None, plot=False, verbose=True, save_schedule=False, tag=None):
 		'''
 		METHOD	:: This method takes the duration of observation, time of the GW trigger
 				   integration time per tile as input and outputs the observation
@@ -651,7 +658,7 @@ class Scheduler(RankedTileGenerator):
 		integrationTime  :: Time spent per tile in seconds (default == 120 seconds)
 		observedTiles	 :: (Future development) Array of tile indices that has been 
 							observed in an earlier epoch
-		plot			 :: (optional) Plots the tile centers that are observed.
+		plot			 :: (optional, future development) Plots the tile centers that are observed.
 		verbose			 :: Toggle verbose flag for print statements.
 				   
 		
@@ -661,8 +668,6 @@ class Scheduler(RankedTileGenerator):
 		includeTiles[np.sum(includeTiles)] = True
 		
 		thresholdTileProb = self.tileProbs[includeTiles][-1]
-
-
 
 		observedTime = 0 ## Initiating the observed times
 		elapsedTime = 0  ## Initiating the elapsed times. Time since observation begun.
@@ -677,7 +682,6 @@ class Scheduler(RankedTileGenerator):
 		moon_ra = []
 		moon_dec = []
 		lunar_illumination = []
-		
 		
 		
 		[_, _, _, altAz_sun] = self.tileVisibility(eventTime, gps=True)
@@ -807,12 +811,14 @@ class Scheduler(RankedTileGenerator):
 											columns=['Observation_Time', 'Tile_Index', 'RA', 'Dec', 'Tile_Probs', 'Slew Angle (deg)',\
 											'Air_Mass', 'Lunar-tile', \
 											'Lunar_Illumination'])
+			
+
+			if save_schedule:
+				if tag is None: 
+					tag = self.configParser.get('plot', 'filenametag')
+				self.df.to_csv(self.outdir+tag+"_schedule.csv")
+
 			return df
-
-
-
-
-
 
 
 
@@ -855,7 +861,7 @@ def apparent_from_absolute_mag(absolute_mag, source_dist_parsec):
 
 def detectability(rank, time_per_tile, total_observation_time,\
 				  absolute_mag, source_dist_parsec, time_data,\
-				  limmag_data, error_data = None, verbose=False):
+				  limmag_data, error_data = None, verbose=True):
 	'''
 	METHOD :: This method takes as input the time allotted per tile, 
 	total observation time allotted for an event, the absolute 
