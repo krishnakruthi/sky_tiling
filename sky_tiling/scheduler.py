@@ -179,15 +179,18 @@ class Scheduler(RankedTileGenerator):
 		## This will be changed in the future. The argument of time that 
 		## will be passed should be an astropy time quantity so that there
 		## is no need to specify what kind of time format is used.
+
+		localTime = Time(eventTime, format='gps') ## This variable name is incorrect!
 		
 		if altAz_sun.alt.value >= -18.0:
-			localTime = Time(eventTime, format='gps') ## This variable name is incorrect!
 			if verbose: print('Local event time: '+ str(localTime.utc.datetime)+'; Sun is above the horizon')
 			eventTime = self.advanceToSunset(eventTime, integrationTime)
 			if verbose:
 				localTime = Time(eventTime, format='gps')
 				print('Scheduling observations starting: ' + str(localTime.utc.datetime))
-
+		else:
+			if verbose:
+				print('Local event time: '+ str(localTime.utc.datetime)+'; Scheduling observations right away!')
 		
 		while elapsedTime <= duration: 
 			[tileIndices, tileProbs, altAz_tile, altAz_sun] = self.tileVisibility(eventTime, gps=True)
