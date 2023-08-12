@@ -295,15 +295,15 @@ class RankedTileGenerator:
 		m.drawmeridians(np.arange(0.,420.,30.), color='grey')
 		m.drawmapboundary(fill_color='white')
 		lons = np.arange(-150,151,30)
+
+		m.plot(RAP_map, DecP_map, color='r', marker='.', linewidth=0, markersize=3, alpha=0.8) 
+
 		if save_plot:
 			m.label_meridians(lons, fontsize=60, vnudge=1, halign='left', hnudge=-1)
 			if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=0, markersize=50, alpha=1.0) 
 		else:
 			m.label_meridians(lons, fontsize=12, vnudge=1, halign='left', hnudge=-1)
 			if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=1, markersize=5, alpha=1.0)
-
-		m.plot(RAP_map, DecP_map, color='r', marker='.', linewidth=0, markersize=3, alpha=0.8) 
-
 
 		Dec_tile = self.tileData['dec_center']
 		RA_tile = self.tileData['ra_center']
