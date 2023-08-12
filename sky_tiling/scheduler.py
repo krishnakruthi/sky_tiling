@@ -44,7 +44,7 @@ class Scheduler(RankedTileGenerator):
 	the second should be the tile center's ra value and the third the dec value of the 
 	same. The utcoffset is the time difference between UTC and the site in hours. 
 	'''
-	def __init__(self, skymapFile, configfile, astropy_site_location=None, outdir=None):
+	def __init__(self, skymapFile, configfile, astropy_site_location=None, outdir=None, resolution=None):
 
 		configParser = configparser.ConfigParser()
 		configParser.read(configfile)
@@ -63,13 +63,13 @@ class Scheduler(RankedTileGenerator):
 		self.skymapfile = skymapFile
 		
 		self.tileObj = RankedTileGenerator(skymapFile, configfile)
-		df_ranked_tiles = self.tileObj.getRankedTiles()
+		df_ranked_tiles = self.tileObj.getRankedTiles(resolution=resolution)
 		self.tileIndices = df_ranked_tiles["tile_index"].values
 		self.tileProbs = df_ranked_tiles["tile_prob"].values
 
 		self.tiles = SkyCoord(ra = self.tileData['ra_center'][self.tileIndices.astype(int)]*u.degree, 
 					    dec = self.tileData['dec_center'][self.tileIndices.astype(int)]*u.degree, 
-					    frame = 'icrs') ### Tile(s) ###check thissss plissss
+					    frame = 'icrs') ### Tile(s) 
 
 	def tileVisibility(self, t, gps=False):
 		'''
@@ -182,11 +182,11 @@ class Scheduler(RankedTileGenerator):
 		
 		if altAz_sun.alt.value >= -18.0:
 			localTime = Time(eventTime, format='gps') ## This variable name is incorrect!
-			if verbose: print(str(localTime.utc.datetime) + ': Sun above the horizon')
+			if verbose: print('Local event time: '+ str(localTime.utc.datetime)+'; Sun is above the horizon')
 			eventTime = self.advanceToSunset(eventTime, integrationTime)
 			if verbose:
 				localTime = Time(eventTime, format='gps')
-				print('Advancing time to ' + str(localTime.utc.datetime))
+				print('Scheduling observations starting: ' + str(localTime.utc.datetime))
 				print('\n')
 
 		
@@ -195,8 +195,8 @@ class Scheduler(RankedTileGenerator):
 			localTime = Time(eventTime, format='gps') ## This variable name is incorrect!
 			
 			if altAz_sun.alt.value < -18.0: 
-				if verbose: 
-					print(str(localTime.utc.datetime) + ': Observation mode')
+				# if verbose: 
+				# 	print(str(localTime.utc.datetime) + ': Observation mode')
 				for jj in np.arange(len(tileIndices)):
 					if tileIndices[jj] not in scheduled:
 						if tileProbs[jj] >= thresholdTileProb:
@@ -214,7 +214,7 @@ class Scheduler(RankedTileGenerator):
 										np.cos(sunMoonAngle))
 							illumination = 0.5*(1.0 + np.cos(phaseAngle))
 							
-							if verbose: print('Lunar illumination = ' + str(illumination))
+							# if verbose: print('Lunar illumination = ' + str(illumination))
 							lunar_illumination.append(illumination)
 							
 							moon_ra.append(Moon.ra.value)
@@ -225,6 +225,7 @@ class Scheduler(RankedTileGenerator):
 			else:
 				if verbose: 
 					localTime = Time(eventTime, format='gps')
+					print("Epoch completed! Observed for "+str(observedTime)+" hrs.")
 					print(str(localTime.utc.datetime) + ': Sun above the horizon')
 				eventTime = self.advanceToSunset(eventTime, integrationTime)
 				if verbose:
@@ -237,9 +238,9 @@ class Scheduler(RankedTileGenerator):
 
 			eventTime += integrationTime
 			elapsedTime += integrationTime
-			if verbose:
-				print('elapsedTime --->' + str(elapsedTime))
-				print('observedTime --->' + str(observedTime))
+			# if verbose:
+			# 	print('elapsedTime --->' + str(elapsedTime))
+			# 	print('observedTime --->' + str(observedTime))
 				
 		if np.any(scheduled) == False: 
 			print("The input tiles are not visible from the given site")
@@ -251,7 +252,7 @@ class Scheduler(RankedTileGenerator):
 			alttiles = []
 			for ii in np.arange(len(scheduled)):
 				tile_obs_times.append(ObsTimes[ii].utc.datetime)
-				if verbose: print(str(ObsTimes[ii].utc.datetime) + '\t' + str(int(scheduled[ii])))
+				# if verbose: print(str(ObsTimes[ii].utc.datetime) + '\t' + str(int(scheduled[ii])))
 				altAz_tile = self.tiles[int(scheduled[ii])].transform_to(AltAz(obstime=\
 										ObsTimes[ii], location=self.Observatory))
 				alttiles.append(obs_tile_altAz[ii].alt.value)

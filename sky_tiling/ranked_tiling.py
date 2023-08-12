@@ -193,7 +193,7 @@ class RankedTileGenerator:
 		if resolution < 64: resolution = 64
 		if verbose: print('Using resolution of ' + str(resolution))
 		filename = self.preCompDictFiles[resolution]
-		if verbose: print(filename)
+		if verbose: print("Using file: "+filename)
 		if not os.path.isfile(filename):
 			if verbose: print("Precomputed pickle file for this resolution is not found")
 			if verbose: print("Reverting to default resolution (= 256)")
