@@ -180,31 +180,31 @@ class Scheduler(RankedTileGenerator):
 		## will be passed should be an astropy time quantity so that there
 		## is no need to specify what kind of time format is used.
 
-		time_clock_gps = Time(time_clock, format='gps') ## This variable name is incorrect!
+		time_clock_astropy = Time(time_clock, format='gps') ## This variable name is incorrect!
 		
 		if altAz_sun.alt.value >= -18.0:
-			if verbose: print('Local event time: '+ str(time_clock_gps.utc.datetime)+'; Sun is above the horizon')
+			if verbose: print('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Sun is above the horizon')
 			time_clock = self.advanceToSunset(time_clock, integrationTime)
 			if verbose:
-				time_clock_gps = Time(time_clock, format='gps')
-				print('Scheduling observations starting: ' + str(time_clock_gps.utc.datetime))
+				time_clock_astropy = Time(time_clock, format='gps')
+				print('Scheduling observations starting (GPS): ' + str(time_clock_astropy.utc.datetime))
 		else:
 			if verbose:
-				print('Local event time: '+ str(time_clock_gps.utc.datetime)+'; Scheduling observations right away!')
+				print('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Scheduling observations right away!')
 		
 		while elapsedTime <= duration: 
 			[tileIndices, tileProbs, altAz_tile, altAz_sun] = self.tileVisibility(time_clock, gps=True)
-			time_clock_gps = Time(time_clock, format='gps') ## This variable name is incorrect!
+			time_clock_astropy = Time(time_clock, format='gps') ## This variable name is incorrect!
 			
 			if altAz_sun.alt.value < -18.0: 
 				# if verbose: 
-				# 	print(str(time_clock_gps.utc.datetime) + ': Observation mode')
+				# 	print(str(time_clock_astropy.utc.datetime) + ': Observation mode')
 				for jj in np.arange(len(tileIndices)):
 					if tileIndices[jj] not in scheduled:
 						if tileProbs[jj] >= thresholdTileProb:
 							scheduled = np.append(scheduled, tileIndices[jj])
 							obs_tile_altAz.append(altAz_tile[jj])
-							ObsTimes.append(time_clock_gps)
+							ObsTimes.append(time_clock_astropy)
 							pVal_observed.append(tileProbs[jj])
 							Sun = get_sun(Time(time_clock, format='gps'))
 							sun_ra.append(Sun.ra.value)
@@ -226,13 +226,13 @@ class Scheduler(RankedTileGenerator):
 				
 			else:
 				if verbose: 
-					time_clock_gps = Time(time_clock, format='gps')
+					time_clock_astropy = Time(time_clock, format='gps')
 					print("Epoch completed!")
-					print(str(time_clock_gps.utc.datetime) + ': Sun above the horizon')
+					print(str(time_clock_astropy.utc.datetime) + ': Sun above the horizon')
 				time_clock = self.advanceToSunset(time_clock, integrationTime)
 				if verbose:
-					time_clock_gps = Time(time_clock, format='gps')
-					print('Advancing time to ' + str(time_clock_gps.utc.datetime))
+					time_clock_astropy = Time(time_clock, format='gps')
+					print('Advancing time to ' + str(time_clock_astropy.utc.datetime))
 
 			ii += 1
 			time_clock += integrationTime
