@@ -225,7 +225,7 @@ class RankedTileGenerator:
 		if save_csv:
 			if tag is None: 
 				tag = self.configParser.get('plot', 'filenametag')
-			self.df.to_csv(self.outdir+tag+"_ranked_tiles.csv")
+			self.df.to_csv(self.outdir+tag+"_ranked_tiles.csv", index=False)
 		
 		return self.df
 
@@ -354,6 +354,7 @@ class RankedTileGenerator:
 			if tag is None: 
 				tag = self.configParser.get('plot', 'filenametag')
 			plt.savefig(self.outdir + tag + '_skyTiles' + '.' + extension)
+			plt.close()
 
 		else:
 			return fig

@@ -232,7 +232,7 @@ class Scheduler(RankedTileGenerator):
 				time_clock = self.advanceToSunset(time_clock, integrationTime)
 				if verbose:
 					time_clock_astropy = Time(time_clock, format='gps')
-					print('Advancing time to ' + str(time_clock_astropy.utc.datetime))
+					print('Advancing time (GPS) to ' + str(time_clock_astropy.utc.datetime))
 
 			ii += 1
 			time_clock += integrationTime
@@ -307,6 +307,6 @@ class Scheduler(RankedTileGenerator):
 			if save_schedule:
 				if tag is None: 
 					tag = self.configParser.get('plot', 'filenametag')
-				df.to_csv(self.outdir+tag+"_schedule.csv")
+				df.to_csv(self.outdir+tag+"_schedule.csv", index=False)
 
 			return df
