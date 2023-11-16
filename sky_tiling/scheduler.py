@@ -173,6 +173,7 @@ class Scheduler(RankedTileGenerator):
 		moon_ra = []
 		moon_dec = []
 		lunar_illumination = []
+		moon_altitude = []
 		
 		time_clock = eventTime
 		[_, _, _, altAz_sun] = self.tileVisibility(time_clock, gps=True)
@@ -215,9 +216,10 @@ class Scheduler(RankedTileGenerator):
 										Moon.distance - Sun.distance *
 										np.cos(sunMoonAngle))
 							illumination = 0.5*(1.0 + np.cos(phaseAngle))
-							
-							# if verbose: print('Lunar illumination = ' + str(illumination))
+							moon_altAz = get_moon(Time(time_clock, format='gps')).transform_to(AltAz(
+								                       obstime=Time(time_clock, format='gps'), location=self.Observatory))
 							lunar_illumination.append(illumination)
+							moon_altitude.append(moon_altAz.alt.value)
 							
 							moon_ra.append(Moon.ra.value)
 							moon_dec.append(Moon.dec.value)
@@ -297,8 +299,8 @@ class Scheduler(RankedTileGenerator):
 
 			slewDist = np.array(slewDist)
 			df = pd.DataFrame(np.vstack((tile_obs_times, scheduled.astype('int'), self.tileData['ra_center'][scheduled.astype('int')], self.tileData['dec_center'][scheduled.astype('int')], pVal_observed, slewDist,\
-											airmass, moonTile, moonTileDist, moonDist, lunar_illumination)).T, columns=['Observation_Time', 'Tile_Index', 'RA', 'Dec', 'Tile_Probs', 'Slew Angle (deg)','Air_Mass', 
-										    'Lunar-tile', 'Lunar-tile separation (deg)', 'Lunar separation (deg)', 'Lunar_Illumination'])
+											airmass, moonTile, moonTileDist, moonDist, lunar_illumination, np.array(moon_altitude))).T, columns=['Observation_Time', 'Tile_Index', 'RA', 'Dec', 'Tile_Probs', 'Slew Angle (deg)','Air_Mass', 
+										    'Lunar-tile', 'Lunar-tile separation (deg)', 'Lunar separation (deg)', 'Lunar_Illumination', 'Lunar_altitude'])
 
 			if save_schedule:
 				if tag is None: 
