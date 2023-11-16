@@ -275,18 +275,17 @@ class Scheduler(RankedTileGenerator):
 								[np.isin(self.tileData['ID'], scheduled.astype('int'))])
 			Dec_scheduled_tile = np.deg2rad(self.tileData['dec_center']\
 								[np.isin(self.tileData['ID'], scheduled.astype('int'))])
-			RA_Moontile = np.deg2rad(self.tileData['ra_center']\
-							[np.isin(self.tileData['ID'], moonTile)])
-			Dec_Moontile = np.deg2rad(self.tileData['dec_center']\
-							[np.isin(self.tileData['ID'], moonTile)])
+			RA_Moontile = np.deg2rad(self.tileData['ra_center'][moonTile])
+			Dec_Moontile = np.deg2rad(self.tileData['dec_center'][moonTile])
+			
 
-			# moonTileDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(Dec_Moontile) +\
-			# 			  (np.cos(Dec_scheduled_tile)*np.cos(Dec_Moontile)*\
-			# 			  np.cos(RA_scheduled_tile - RA_Moontile))))
+			moonTileDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(Dec_Moontile) +\
+						  (np.cos(Dec_scheduled_tile)*np.cos(Dec_Moontile)*\
+						  np.cos(RA_scheduled_tile - RA_Moontile))))
 
-			# moonDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(np.deg2rad(moon_decs)) +\
-			# 			  (np.cos(Dec_scheduled_tile)*np.cos(np.deg2rad(moon_decs))*\
-			# 			  np.cos(RA_scheduled_tile - np.deg2rad(moon_ras)))))
+			moonDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(np.deg2rad(moon_decs)) +\
+						  (np.cos(Dec_scheduled_tile)*np.cos(np.deg2rad(moon_decs))*\
+						  np.cos(RA_scheduled_tile - np.deg2rad(moon_ras)))))
 
 			## Slewing angle computation ##
 			slewDist = [0.0]
@@ -298,11 +297,8 @@ class Scheduler(RankedTileGenerator):
 
 			slewDist = np.array(slewDist)
 			df = pd.DataFrame(np.vstack((tile_obs_times, scheduled.astype('int'), self.tileData['ra_center'][scheduled.astype('int')], self.tileData['dec_center'][scheduled.astype('int')], pVal_observed, slewDist,\
-											airmass, moonTile, lunar_illumination)).T,\
-											columns=['Observation_Time', 'Tile_Index', 'RA', 'Dec', 'Tile_Probs', 'Slew Angle (deg)',\
-											'Air_Mass', 'Lunar-tile', \
-											'Lunar_Illumination'])
-			
+											airmass, moonTile, moonTileDist, moonDist, lunar_illumination)).T, columns=['Observation_Time', 'Tile_Index', 'RA', 'Dec', 'Tile_Probs', 'Slew Angle (deg)','Air_Mass', 
+										    'Lunar-tile', 'Lunar-tile separation (deg)', 'Lunar separation (deg)', 'Lunar_Illumination'])
 
 			if save_schedule:
 				if tag is None: 
