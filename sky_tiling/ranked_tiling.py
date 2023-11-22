@@ -291,9 +291,9 @@ class RankedTileGenerator:
 		m.drawmapboundary(fill_color='white')
 		lons = np.arange(-150,151,30)
 
-		m.plot(RAP_map, DecP_map, color='r', marker='.', linewidth=0, markersize=3, alpha=0.8) 
+		m.plot(RAP_map, DecP_map, color='mistyrose', marker='.', linewidth=0, markersize=0.5, alpha=1) 
 		m.label_meridians(lons, fontsize=12, vnudge=1, halign='left', hnudge=-1)
-		if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=1, markersize=5, alpha=1.0)
+		if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=1, markersize=1, alpha=1.0)
 
 		Dec_tile = self.tileData['dec_center']
 		RA_tile = self.tileData['ra_center']
@@ -335,16 +335,16 @@ class RankedTileGenerator:
 				[dec_down, dec_up,
 				ra_down_left, ra_down_right, 
 				ra_up_left, ra_up_right] = getTileBounds(FOV, RA_tile[ii], Dec_tile[ii])
-				m.plot(RAP_peak, DecP_peak, 'k.', markersize=4, mew=1, alpha=alpha)
+				# m.plot(RAP_peak, DecP_peak, 'k.', markersize=4, mew=1, alpha=alpha)
 
 				RAP1, DecP1 = m(ra_up_left, dec_up)
 				RAP2, DecP2 = m(ra_up_right, dec_up)
 				RAP3, DecP3 = m(ra_down_left, dec_down)
 				RAP4, DecP4 = m(ra_down_right, dec_down)
-				m.plot([RAP1, RAP2], [DecP1, DecP2],'k-', linewidth=lw, alpha=alpha) 
-				m.plot([RAP2, RAP4], [DecP2, DecP4],'k-', linewidth=lw, alpha=alpha) 
-				m.plot([RAP4, RAP3], [DecP4, DecP3],'k-', linewidth=lw, alpha=alpha) 
-				m.plot([RAP3, RAP1], [DecP3, DecP1],'k-', linewidth=lw, alpha=alpha)
+				m.plot([RAP1, RAP2], [DecP1, DecP2],'k-', linewidth=0.5, alpha=0.5) 
+				m.plot([RAP2, RAP4], [DecP2, DecP4],'k-', linewidth=0.5, alpha=0.5) 
+				m.plot([RAP4, RAP3], [DecP4, DecP3],'k-', linewidth=0.5, alpha=0.5) 
+				m.plot([RAP3, RAP1], [DecP3, DecP1],'k-', linewidth=0.5, alpha=0.5)
 
 			else:
 				m.plot(RAP_peak, DecP_peak, 'ko', markersize=lw, mew=1, alpha=alpha)
@@ -353,7 +353,7 @@ class RankedTileGenerator:
 			extension = self.configParser.get('plot', 'extension')
 			if tag is None: 
 				tag = self.configParser.get('plot', 'filenametag')
-			plt.savefig(self.outdir + tag + '_skyTiles' + '.' + extension)
+			plt.savefig(self.outdir + tag + '_skyTiles' + '.' + extension, dpi=600)
 			plt.close()
 
 		else:
