@@ -17,6 +17,7 @@
 
 import numpy as np
 import pandas as pd
+import logging
 
 import configparser
 from scipy import interpolate
@@ -44,10 +45,11 @@ class Scheduler(RankedTileGenerator):
 	the second should be the tile center's ra value and the third the dec value of the 
 	same. The utcoffset is the time difference between UTC and the site in hours. 
 	'''
-	def __init__(self, skymapFile, configfile, astropy_site_location=None, outdir=None, resolution=None):
+	def __init__(self, skymapFile, configfile, astropy_site_location=None, outdir=None, resolution=None, logfile=None):
 
 		configParser = configparser.ConfigParser()
 		configParser.read(configfile)
+		logging.basicConfig(filename=logfile, level=logging.INFO, format='%(message)s')
 
 		self.tileCoord = configParser.get('tileFiles', 'tileFile')
 		self.outdir = outdir
@@ -154,7 +156,7 @@ class Scheduler(RankedTileGenerator):
 				   
 		
 		'''
-		
+
 		includeTiles = np.cumsum(self.tileProbs) < CI
 		includeTiles[np.sum(includeTiles)] = True
 		
@@ -184,14 +186,14 @@ class Scheduler(RankedTileGenerator):
 		time_clock_astropy = Time(time_clock, format='gps') ## This variable name is incorrect!
 		
 		if altAz_sun.alt.value >= -18.0:
-			if verbose: print('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Sun is above the horizon')
+			if verbose: logging.info('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Sun is above the horizon')
 			time_clock = self.advanceToSunset(time_clock, integrationTime)
 			if verbose:
 				time_clock_astropy = Time(time_clock, format='gps')
-				print('Scheduling observations starting (GPS): ' + str(time_clock_astropy.utc.datetime))
+				logging.info('Scheduling observations starting (GPS): ' + str(time_clock_astropy.utc.datetime))
 		else:
 			if verbose:
-				print('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Scheduling observations right away!')
+				logging.info('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Scheduling observations right away!')
 		
 		while elapsedTime <= duration: 
 			[tileIndices, tileProbs, altAz_tile, altAz_sun] = self.tileVisibility(time_clock, gps=True)
@@ -199,7 +201,7 @@ class Scheduler(RankedTileGenerator):
 			
 			if altAz_sun.alt.value < -18.0: 
 				# if verbose: 
-				# 	print(str(time_clock_astropy.utc.datetime) + ': Observation mode')
+				# 	logging.info(str(time_clock_astropy.utc.datetime) + ': Observation mode')
 				for jj in np.arange(len(tileIndices)):
 					if tileIndices[jj] not in scheduled:
 						if tileProbs[jj] >= thresholdTileProb:
@@ -229,22 +231,22 @@ class Scheduler(RankedTileGenerator):
 			else:
 				if verbose: 
 					time_clock_astropy = Time(time_clock, format='gps')
-					print("Epoch completed!")
-					print(str(time_clock_astropy.utc.datetime) + ': Sun above the horizon')
+					logging.info("Epoch completed!")
+					logging.info(str(time_clock_astropy.utc.datetime) + ': Sun above the horizon')
 				time_clock = self.advanceToSunset(time_clock, integrationTime)
 				if verbose:
 					time_clock_astropy = Time(time_clock, format='gps')
-					print('Advancing time (GPS) to ' + str(time_clock_astropy.utc.datetime))
+					logging.info('Advancing time (GPS) to ' + str(time_clock_astropy.utc.datetime))
 
 			ii += 1
 			time_clock += integrationTime
 			elapsedTime += integrationTime
 			# if verbose:
-			# 	print('elapsedTime --->' + str(elapsedTime))
-			# 	print('observedTime --->' + str(observedTime))
+			# 	logging.info('elapsedTime --->' + str(elapsedTime))
+			# 	logging.info('observedTime --->' + str(observedTime))
 				
 		if np.any(scheduled) == False: 
-			print("The input tiles are not visible from the given site")
+			logging.info("The input tiles are not visible from the given site")
 			return None
 
 		else: 
@@ -253,7 +255,7 @@ class Scheduler(RankedTileGenerator):
 			alttiles = []
 			for ii in np.arange(len(scheduled)):
 				tile_obs_times.append(ObsTimes[ii].utc.datetime)
-				# if verbose: print(str(ObsTimes[ii].utc.datetime) + '\t' + str(int(scheduled[ii])))
+				# if verbose: logging.info(str(ObsTimes[ii].utc.datetime) + '\t' + str(int(scheduled[ii])))
 				altAz_tile = self.tiles[int(scheduled[ii])].transform_to(AltAz(obstime=\
 										ObsTimes[ii], location=self.Observatory))
 				alttiles.append(obs_tile_altAz[ii].alt.value)
