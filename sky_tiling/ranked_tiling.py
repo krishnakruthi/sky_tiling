@@ -118,7 +118,7 @@ class RankedTileGenerator:
 		index = np.argmin(s) ### minimum angular distance index
 		
 
-		return ID[index] - 1 ### Since the indexing begins with 1.
+		return ID[index] ### Since the indexing begins with 1.
 
 	
 	def searchedArea(self, ra, dec, resolution=None, verbose=True):
@@ -293,7 +293,22 @@ class RankedTileGenerator:
 
 		m.plot(RAP_map, DecP_map, color='mistyrose', marker='.', linewidth=0, markersize=0.5, alpha=1) 
 		m.label_meridians(lons, fontsize=12, vnudge=1, halign='left', hnudge=-1)
-		if event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=1, markersize=1, alpha=1.0)
+		if event:
+			m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=1, markersize=1, alpha=1.0)
+			source_index = self.sourceTile(event[0], event[1])
+			RA_event_tilecenter = self.tileData['ra_center'][source_index]
+			Dec_event_tilecenter = self.tileData['dec_center'][source_index]
+			print(RA_event_tilecenter, Dec_event_tilecenter, source_index)
+			[dec_down, dec_up,ra_down_left, ra_down_right, ra_up_left, ra_up_right] = getTileBounds(FOV, RA_event_tilecenter, Dec_event_tilecenter)
+			RAP1, DecP1 = m(ra_up_left, dec_up)
+			RAP2, DecP2 = m(ra_up_right, dec_up)
+			RAP3, DecP3 = m(ra_down_left, dec_down)
+			RAP4, DecP4 = m(ra_down_right, dec_down)
+			m.plot([RAP1, RAP2], [DecP1, DecP2],'b-', linewidth=0.5, alpha=0.5,) 
+			m.plot([RAP2, RAP4], [DecP2, DecP4],'b-', linewidth=0.5, alpha=0.5,) 
+			m.plot([RAP4, RAP3], [DecP4, DecP3],'b-', linewidth=0.5, alpha=0.5,) 
+			m.plot([RAP3, RAP1], [DecP3, DecP1],'b-', linewidth=0.5, alpha=0.5,)
+
 
 		Dec_tile = self.tileData['dec_center']
 		RA_tile = self.tileData['ra_center']
