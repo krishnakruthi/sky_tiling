@@ -118,7 +118,7 @@ class RankedTileGenerator:
 		index = np.argmin(s) ### minimum angular distance index
 		
 
-		return ID[index] ### Since the indexing begins with 1.
+		return ID[index] - 1 ### Since the indexing begins with 1.
 
 	
 	def searchedArea(self, ra, dec, resolution=None, verbose=True):
