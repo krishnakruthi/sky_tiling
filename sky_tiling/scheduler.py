@@ -279,8 +279,9 @@ class Scheduler(RankedTileGenerator):
 								[np.isin(self.tileData['ID'], scheduled.astype('int'))])
 			RA_Moontile = np.deg2rad(self.tileData['ra_center'][moonTile])
 			Dec_Moontile = np.deg2rad(self.tileData['dec_center'][moonTile])
-			
 
+			print(scheduled.astype('int'),moonTile)
+			print(RA_scheduled_tile.shape, RA_Moontile.shape, Dec_scheduled_tile.shape, Dec_Moontile.shape)
 			moonTileDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(Dec_Moontile) +\
 						  (np.cos(Dec_scheduled_tile)*np.cos(Dec_Moontile)*\
 						  np.cos(RA_scheduled_tile - RA_Moontile))))
