@@ -102,8 +102,8 @@ class RankedTileGenerator:
 		dec		   :: Declination angle of the source in degrees
 		tiles	   :: The tile coordinate file (in the following format)
 			      ID	ra_center	dec_center	
-			      1  	24.714290	-85.938460
-			      2  	76.142860	-85.938460
+			      0  	24.714290	-85.938460
+			      1  	76.142860	-85.938460
 			      ...
 		'''
 
@@ -118,7 +118,7 @@ class RankedTileGenerator:
 		index = np.argmin(s) ### minimum angular distance index
 		
 
-		return ID[index] - 1 ### Since the indexing begins with 1.
+		return ID[index] ### Since the indexing begins with 1.
 
 	
 	def searchedArea(self, ra, dec, resolution=None, verbose=True):
@@ -239,8 +239,8 @@ class RankedTileGenerator:
 		allTiles_probs_sorted  :: The probabilities of the ranked-tiles
 		tileFile    :: The file with tile indices and centers
 			       		ID	ra_center	dec_center	
-			       		1  	24.714290	-85.938460
-			       		2  	76.142860	-85.938460
+			       		0  	24.714290	-85.938460
+			       		1  	76.142860	-85.938460
 		
 		FOV			:: Field of view of the telescopes. If not supplied,
 				   		tile boundaries will not be plotted.
@@ -407,7 +407,7 @@ class RankedTileGenerator:
 		filename = self.preCompDictFiles[resolution]
 		File = open(filename, 'rb')
 		data = pickle.load(File)
-		tile_index = np.arange(len(data))
+		# tile_index = np.arange(len(data))
 		skymapUD = hp.ud_grade(self.skymap, resolution, power=-2)
 		npix = len(skymapUD)
 		theta, phi = hp.pix2ang(resolution, np.arange(0, npix))
@@ -442,7 +442,7 @@ class RankedTileGenerator:
 		
 		Dec_tile = self.tileData['dec_center']
 		RA_tile = self.tileData['ra_center']
-		tile_index = self.tileData['ID']-1
+		tile_index = self.tileData['ID']
 		closestTileIndex = []
 
 		sampleIndex = samples[:,0]

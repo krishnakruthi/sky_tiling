@@ -37,7 +37,7 @@ def createTileCenters(telescope, fov):
         # gapAtEdge = ((360.0-newRAs[-1]) + newRAs[0])*np.cos(dd*np.pi/180.)
         # avgGap = np.median(np.diff(newRAs))*np.cos(dd*np.pi/180.)
 		
-    allTileCents = np.vstack((np.arange(1, len(RA_vals)+1), RA_vals, Dec_Vals)).T
+    allTileCents = np.vstack((np.arange(len(RA_vals)), RA_vals, Dec_Vals)).T
     tile_center_file_name = 'tile_center_files/' + telescope + '_tiles_indexed.dat'
     np.savetxt(tile_center_file_name, allTileCents, fmt='%d\t%f\t%f', header='ID\tra_center\tdec_center', comments='')
     return tile_center_file_name

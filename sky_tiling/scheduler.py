@@ -40,7 +40,7 @@ class Scheduler(RankedTileGenerator):
 	is created. To generate scheduler for other telescopes use the corresponding site
 	names which can be obtaine from astropy.coordinates.EarthLocation.get_site_names().
 	The tile tile coordinate file also needs to be supplied to the variable tileCoord.
-	This file needs to have at least three columns, the first being an ID (1, 2, ...),
+	This file needs to have at least three columns, the first being an ID (0, 1, 2, ...),
 	the second should be the tile center's ra value and the third the dec value of the 
 	same. The utcoffset is the time difference between UTC and the site in hours. 
 	'''
@@ -280,8 +280,6 @@ class Scheduler(RankedTileGenerator):
 			RA_Moontile = np.deg2rad(self.tileData['ra_center'][moonTile])
 			Dec_Moontile = np.deg2rad(self.tileData['dec_center'][moonTile])
 
-			print(scheduled.astype('int'),moonTile)
-			print(RA_scheduled_tile.shape, RA_Moontile.shape, Dec_scheduled_tile.shape, Dec_Moontile.shape)
 			moonTileDist = np.rad2deg(np.arccos(np.sin(Dec_scheduled_tile)*np.sin(Dec_Moontile) +\
 						  (np.cos(Dec_scheduled_tile)*np.cos(Dec_Moontile)*\
 						  np.cos(RA_scheduled_tile - RA_Moontile))))
