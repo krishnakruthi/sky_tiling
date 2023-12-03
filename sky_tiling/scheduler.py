@@ -158,7 +158,7 @@ class Scheduler(RankedTileGenerator):
 		'''
 
 		includeTiles = np.cumsum(self.tileProbs) < CI
-		includeTiles[np.sum(includeTiles)] = True
+		includeTiles[np.sum(includeTiles)-1] = True
 		
 		thresholdTileProb = self.tileProbs[includeTiles][-1]
 

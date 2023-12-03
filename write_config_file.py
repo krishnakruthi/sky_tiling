@@ -132,30 +132,6 @@ configFile.writelines('trigger_time = ' + '\n\n')
 
 configFile.close()
 
-
-# if args.path is not None:
-# 	os.system('cp tile_pixel_maps/*.dat ' + args.path + '/.')
-
-
-# binDir = currentDir + '/bin'
-# utils = currentDir + '/utilities'
-
-# exportText1 = 'export PYTHONPATH='+ currentDir +':${PYTHONPATH}'
-# exportText2 = 'export PYTHONPATH='+ binDir +':${PYTHONPATH}'
-# exportText3 = 'export PYTHONPATH='+ utils +':${PYTHONPATH}'
-# print('''\n***** sky_tiling is configured *****.
-# Run the following in your terminal or put it in your .bashrc''')
-# print(exportText1)
-# print(exportText2)
-# print(exportText3)
-# print('\n')
-
-# sourceFile = open(args.work + '/sky_tilingrc', 'w')
-# sourceFile.writelines(exportText1 + '\n')
-# sourceFile.writelines(exportText2 + '\n')
-# sourceFile.writelines(exportText3 + '\n')
-# os.system('chmod 777 ' + args.work + '/sky_tilingrc')
-
 print('The config file is put in the work directory: ' + args.work + args.telescope +'_config.ini')
 
 
