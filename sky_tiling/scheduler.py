@@ -139,7 +139,7 @@ class Scheduler(RankedTileGenerator):
 			
 		return setTime
 
-	def observationSchedule(self, duration, eventTime, integrationTime=120, CI=0.9,
+	def observationSchedule(self, duration, eventTime, integrationTime=120, CI=0.9, latency=864,
 							observedTiles=None, plot=False, verbose=True, save_schedule=False, tag=None):
 		'''
 		METHOD	:: This method takes the duration of observation, time of the GW trigger
@@ -148,6 +148,7 @@ class Scheduler(RankedTileGenerator):
 				   
 		duration   		 :: Total duration of the observation in seconds.
 		eventTime  		 :: The gps time of the time of the GW trigger.
+		latency          :: Time between eventTime and start of observations (default=864s or 0.01 days)
 		integrationTime  :: Time spent per tile in seconds (default == 120 seconds)
 		observedTiles	 :: (Future development) Array of tile indices that has been 
 							observed in an earlier epoch
@@ -177,7 +178,7 @@ class Scheduler(RankedTileGenerator):
 		lunar_illumination = []
 		moon_altitude = []
 		
-		time_clock = eventTime
+		time_clock = eventTime + latency
 		[_, _, _, altAz_sun] = self.tileVisibility(time_clock, gps=True)
 		## This will be changed in the future. The argument of time that 
 		## will be passed should be an astropy time quantity so that there
