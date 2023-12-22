@@ -73,23 +73,18 @@ class Scheduler(RankedTileGenerator):
 					    dec = self.tileData['dec_center'][self.tileIndices.astype(int)]*u.degree, 
 					    frame = 'icrs') ### Tile(s) 
 
-	def tileVisibility(self, t, gps=False):
+	def tileVisibility(self, time):
 		'''
 		METHOD	:: This method takes as input the time (gps or mjd) of observation
 				   and the observatory site name, and returns the alt and az of the 
 				   ranked tiles. It also returns the alt and az of the sun.
-			  t	:: The time at which observation is made. Default is mjd. If time is 
-				   given in gps then set gps to True.
+		time	:: The time at which observation is made. Assumes astropy Time object is passed.
 
 		'''
-		if gps: time = Time(t, format='gps') ### If time is given in GPS format
-		else: time = Time(t, format='mjd') ### else time is assumed in mjd format
 		altAz_tile = self.tiles.transform_to(AltAz(obstime=time, location=self.Observatory))
 		altAz_sun = get_sun(time).transform_to(AltAz(obstime=time, location=self.Observatory))
-		
-		#isSunDown = altAz_sun.alt.value < -18.0 ### Checks if it is past twilight.
 		whichTilesUp = altAz_tile.alt.value > 20.0  ### Checks which tiles are up		
-		
+
         #return [altAz_tile, self.tileProbs, altAz_sun]
 		return [self.tileIndices[whichTilesUp], self.tileProbs[whichTilesUp], altAz_tile[whichTilesUp], altAz_sun]
 		
@@ -100,47 +95,46 @@ class Scheduler(RankedTileGenerator):
 		above horizon. It finds the nearest time prior to the next sunset within +/- 
 		integration time and then advances the scheduler code to that point. 
 		This speeds up the code by refraining from computing pointings during the daytime.
-		Currently only works with GPS time. In the future mjd will also be included.
+		Currently only works with GPS time.
 		
 		eventTime	:: The GPS time for which the advancement is to be computed.
 		intTim		:: The integration time for the obsevation
+		returns     :: astropy Time object
 		'''
 		
 		dt = np.arange(0, 24*3600 + intTime, intTime)
 		time = Time(eventTime + dt, format='gps')
 		altAz_sun = get_sun(time).transform_to(AltAz(obstime=time, location=self.Observatory))
 		timeBeforeSunset = (eventTime + dt)[altAz_sun.alt.value < -18.0][0]
-		return timeBeforeSunset
+		return Time(timeBeforeSunset, format='gps')
 
 
 	############### NOT TESTED AND NOT USED CURRENTLY ############
-	def whenThisTileSets(self, index, currentTime, duration, gps=False):
-		'''
-		This method approximately computes the amount of time left in seconds for a tile
-		to set below 20 degrees.
+	# def whenThisTileSets(self, index, currentTime, duration):
+	# 	'''
+	# 	This method approximately computes the amount of time left in seconds for a tile
+	# 	to set below 20 degrees.
 		
-		index		::	The index of the tile for which setting tile is to be found
-		currentTime	::	The current time when this tile is scheduled
-		'''
-		# if gps: time = Time(currentTime, format='gps')
-		# else: time = Time(currentTime, format='mjd')
-		thisTile = SkyCoord(ra = self.tileData['ra_center'][index]*u.degree, 
-					    dec = self.tileData['dec_center'][index]*u.degree, 
-					    frame = 'icrs') ### Tile(s)
-		dt = np.arange(0, duration + 1.0, 1.0)
-		times = Time(currentTime + dt, format='gps')
-		altAz_tile = thisTile.transform_to(AltAz(obstime=times,
-												location=self.Observatory))
+	# 	index		::	The index of the tile for which setting tile is to be found
+	# 	currentTime	::	The current time when this tile is scheduled
+	# 	'''
+	# 	thisTile = SkyCoord(ra = self.tileData['ra_center'][index]*u.degree, 
+	# 				    dec = self.tileData['dec_center'][index]*u.degree, 
+	# 				    frame = 'icrs') ### Tile(s)
+	# 	dt = np.arange(0, duration + 1.0, 1.0)
+	# 	times = Time(currentTime + dt, format='gps')
+	# 	altAz_tile = thisTile.transform_to(AltAz(obstime=times,
+	# 											location=self.Observatory))
 		
-		setTime = None
-		if altAz_tile.alt.value[-1] < 20.0:
-			s = interpolate.UnivariateSpline(altAz_tile.alt.value, times.value, k=3)
-			setTime = s(20.0)
+	# 	setTime = None
+	# 	if altAz_tile.alt.value[-1] < 20.0:
+	# 		s = interpolate.UnivariateSpline(altAz_tile.alt.value, times.value, k=3)
+	# 		setTime = s(20.0)
 			
-		return setTime
+	# 	return setTime
 
-	def observationSchedule(self, duration, eventTime, integrationTime=120, CI=0.9, latency=864,
-							observedTiles=None, plot=False, verbose=True, save_schedule=False, tag=None):
+	def observationSchedule(self, duration, eventTime, integrationTime=120, CI=0.9, latency=900,
+							observedTiles=None, save_schedule=False, tag=None):
 		'''
 		METHOD	:: This method takes the duration of observation, time of the GW trigger
 				   integration time per tile as input and outputs the observation
@@ -148,14 +142,11 @@ class Scheduler(RankedTileGenerator):
 				   
 		duration   		 :: Total duration of the observation in seconds.
 		eventTime  		 :: The gps time of the time of the GW trigger.
-		latency          :: Time between eventTime and start of observations (default=864s or 0.01 days)
+		latency          :: Time between eventTime and start of observations (default=900s)
 		integrationTime  :: Time spent per tile in seconds (default == 120 seconds)
 		observedTiles	 :: (Future development) Array of tile indices that has been 
 							observed in an earlier epoch
-		plot			 :: (optional, future development) Plots the tile centers that are observed.
-		verbose			 :: Toggle verbose flag for print statements.
 				   
-		
 		'''
 
 		includeTiles = np.cumsum(self.tileProbs) < CI
@@ -169,8 +160,7 @@ class Scheduler(RankedTileGenerator):
 		obs_tile_altAz = []
 		ObsTimes = []
 		pVal_observed = []
-		ii = 0
-		observed_count = 0
+		# ii = 0
 		sun_ra = []
 		sun_dec = []
 		moon_ra = []
@@ -178,31 +168,23 @@ class Scheduler(RankedTileGenerator):
 		lunar_illumination = []
 		moon_altitude = []
 		
-		time_clock = eventTime + latency
-		[_, _, _, altAz_sun] = self.tileVisibility(time_clock, gps=True)
-		## This will be changed in the future. The argument of time that 
-		## will be passed should be an astropy time quantity so that there
-		## is no need to specify what kind of time format is used.
+		#time clock initialization
+		time_clock_astropy = Time(eventTime + latency, format='gps')
+		[_, _, _, altAz_sun] = self.tileVisibility(time_clock_astropy)
 
-		time_clock_astropy = Time(time_clock, format='gps') ## This variable name is incorrect!
+		#Checking and logging if sun is up; advancing to sunset
+		if altAz_sun.alt.value >= -18.0: 
+			logging.info('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Sun is above the horizon')
+			time_clock_astropy = self.advanceToSunset(time_clock_astropy.to_value('gps'), integrationTime)
+			logging.info('Scheduling observations starting (GPS): ' + str(time_clock_astropy.utc.datetime))
+		#Logging when sun is down
+		else: logging.info('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Scheduling observations right away!')
 		
-		if altAz_sun.alt.value >= -18.0:
-			if verbose: logging.info('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Sun is above the horizon')
-			time_clock = self.advanceToSunset(time_clock, integrationTime)
-			if verbose:
-				time_clock_astropy = Time(time_clock, format='gps')
-				logging.info('Scheduling observations starting (GPS): ' + str(time_clock_astropy.utc.datetime))
-		else:
-			if verbose:
-				logging.info('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Scheduling observations right away!')
-		
-		while elapsedTime <= duration: 
-			[tileIndices, tileProbs, altAz_tile, altAz_sun] = self.tileVisibility(time_clock, gps=True)
-			time_clock_astropy = Time(time_clock, format='gps') ## This variable name is incorrect!
+		#Start scheduling observations
+		while observedTime <= duration: 
+			[tileIndices, tileProbs, altAz_tile, altAz_sun] = self.tileVisibility(time_clock_astropy)
 			
-			if altAz_sun.alt.value < -18.0: 
-				# if verbose: 
-				# 	logging.info(str(time_clock_astropy.utc.datetime) + ': Observation mode')
+			if altAz_sun.alt.value < -18.0:
 				for jj in np.arange(len(tileIndices)):
 					if tileIndices[jj] not in scheduled:
 						if tileProbs[jj] >= thresholdTileProb:
@@ -210,41 +192,28 @@ class Scheduler(RankedTileGenerator):
 							obs_tile_altAz.append(altAz_tile[jj])
 							ObsTimes.append(time_clock_astropy)
 							pVal_observed.append(tileProbs[jj])
-							Sun = get_sun(Time(time_clock, format='gps'))
+							Sun = get_sun(time_clock_astropy)
 							sun_ra.append(Sun.ra.value)
 							sun_dec.append(Sun.dec.value)
-							Moon = get_moon(Time(time_clock, format='gps'))
+							Moon = get_moon(time_clock_astropy)
 							sunMoonAngle = Sun.separation(Moon)
-							phaseAngle = np.arctan2(Sun.distance*np.sin(sunMoonAngle), 
-										Moon.distance - Sun.distance *
-										np.cos(sunMoonAngle))
+							phaseAngle = np.arctan2(Sun.distance*np.sin(sunMoonAngle), Moon.distance - Sun.distance * np.cos(sunMoonAngle))
 							illumination = 0.5*(1.0 + np.cos(phaseAngle))
-							moon_altAz = get_moon(Time(time_clock, format='gps')).transform_to(AltAz(
-								                       obstime=Time(time_clock, format='gps'), location=self.Observatory))
+							moon_altAz = get_moon(time_clock_astropy).transform_to(AltAz(obstime=time_clock_astropy, location=self.Observatory))
 							lunar_illumination.append(illumination)
 							moon_altitude.append(moon_altAz.alt.value)
-							
 							moon_ra.append(Moon.ra.value)
 							moon_dec.append(Moon.dec.value)
-							observedTime += integrationTime ## Tracking observations
 							break
 				
 			else:
-				if verbose: 
-					time_clock_astropy = Time(time_clock, format='gps')
-					logging.info("Epoch completed!")
-					logging.info(str(time_clock_astropy.utc.datetime) + ': Sun above the horizon')
-				time_clock = self.advanceToSunset(time_clock, integrationTime)
-				if verbose:
-					time_clock_astropy = Time(time_clock, format='gps')
-					logging.info('Advancing time (GPS) to ' + str(time_clock_astropy.utc.datetime))
+				logging.info("Epoch completed!")
+				logging.info(str(time_clock_astropy.utc.datetime) + ': Sun above the horizon')
+				time_clock_astropy = self.advanceToSunset(time_clock_astropy.to_value('gps'), integrationTime)
+				logging.info('Advancing time (GPS) to ' + str(time_clock_astropy.utc.datetime))
 
-			ii += 1
-			time_clock += integrationTime
-			elapsedTime += integrationTime
-			# if verbose:
-			# 	logging.info('elapsedTime --->' + str(elapsedTime))
-			# 	logging.info('observedTime --->' + str(observedTime))
+			observedTime += integrationTime ## Tracking observations
+			time_clock_astropy += integrationTime * u.s
 				
 		if np.any(scheduled) == False: 
 			logging.info("The input tiles are not visible from the given site")
@@ -256,7 +225,6 @@ class Scheduler(RankedTileGenerator):
 			alttiles = []
 			for ii in np.arange(len(scheduled)):
 				tile_obs_times.append(ObsTimes[ii].utc.datetime)
-				# if verbose: logging.info(str(ObsTimes[ii].utc.datetime) + '\t' + str(int(scheduled[ii])))
 				altAz_tile = self.tiles[int(scheduled[ii])].transform_to(AltAz(obstime=\
 										ObsTimes[ii], location=self.Observatory))
 				alttiles.append(obs_tile_altAz[ii].alt.value)
