@@ -83,7 +83,7 @@ class Scheduler(RankedTileGenerator):
 		'''
 		altAz_tile = self.tiles.transform_to(AltAz(obstime=time, location=self.Observatory))
 		altAz_sun = get_sun(time).transform_to(AltAz(obstime=time, location=self.Observatory))
-		whichTilesUp = altAz_tile.alt.value > 20.0  ### Checks which tiles are up		
+		whichTilesUp = altAz_tile.alt.value > 30.0  ### Checks which tiles are up		
 
         #return [altAz_tile, self.tileProbs, altAz_sun]
 		return [self.tileIndices[whichTilesUp], self.tileProbs[whichTilesUp], altAz_tile[whichTilesUp], altAz_sun]
@@ -183,9 +183,10 @@ class Scheduler(RankedTileGenerator):
 		#Start scheduling observations
 		while observedTime <= duration: 
 			[tileIndices, tileProbs, altAz_tile, altAz_sun] = self.tileVisibility(time_clock_astropy)
-			
+			#check if sun is still down; not so relevant for the very first observation
 			if altAz_sun.alt.value < -18.0:
 				for jj in np.arange(len(tileIndices)):
+    			#out of all the visible tiles find the one that is above the probability threshold and not scheduled yet
 					if tileIndices[jj] not in scheduled:
 						if tileProbs[jj] >= thresholdTileProb:
 							scheduled = np.append(scheduled, tileIndices[jj])
@@ -205,13 +206,15 @@ class Scheduler(RankedTileGenerator):
 							moon_ra.append(Moon.ra.value)
 							moon_dec.append(Moon.dec.value)
 							break
-				
-			else:
+							#break soon as you find the desired tile
+			
+			else: #this is relevant only at the end of an epoch
 				logging.info("Epoch completed!")
 				logging.info(str(time_clock_astropy.utc.datetime) + ': Sun above the horizon')
 				time_clock_astropy = self.advanceToSunset(time_clock_astropy.to_value('gps'), integrationTime)
 				logging.info('Advancing time (GPS) to ' + str(time_clock_astropy.utc.datetime))
 
+			#continue in the loop
 			observedTime += integrationTime ## Tracking observations
 			time_clock_astropy += integrationTime * u.s
 				
