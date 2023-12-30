@@ -172,11 +172,11 @@ class Scheduler(RankedTileGenerator):
 
 		## Checking and logging if sun is up; advancing to sunset ##
 		if altAz_sun.alt.value >= -18.0: 
-			logging.info('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Sun is above the horizon')
+			logging.info('Event time (UTC): '+ str(time_clock_astropy.utc.datetime)+'; Sun is above the horizon')
 			time_clock_astropy = self.advanceToSunset(time_clock_astropy.to_value('gps'), integrationTime)
-			logging.info('Scheduling observations starting (GPS): ' + str(time_clock_astropy.utc.datetime))
+			logging.info('Scheduling observations starting (UTC): ' + str(time_clock_astropy.utc.datetime))
 		## Logging when sun is down ##
-		else: logging.info('Event time (GPS): '+ str(time_clock_astropy.utc.datetime)+'; Scheduling observations right away!')
+		else: logging.info('Event time (UTC): '+ str(time_clock_astropy.utc.datetime)+'; Scheduling observations right away!')
 		
 		## Start scheduling observations ##
 		while observedTime <= duration: 
@@ -210,7 +210,7 @@ class Scheduler(RankedTileGenerator):
 				logging.info("Epoch completed!")
 				logging.info(str(time_clock_astropy.utc.datetime) + ': Sun above the horizon')
 				time_clock_astropy = self.advanceToSunset(time_clock_astropy.to_value('gps'), integrationTime)
-				logging.info('Advancing time (GPS) to ' + str(time_clock_astropy.utc.datetime))
+				logging.info('Advancing time (UTC) to ' + str(time_clock_astropy.utc.datetime))
 
 			## continue in the loop ##
 			observedTime += integrationTime ## Tracking observations ##
