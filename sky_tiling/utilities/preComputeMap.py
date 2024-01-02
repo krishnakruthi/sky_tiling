@@ -28,7 +28,7 @@ def preComputeMap(tileFile, telescope, target_nside=256):
 	data = np.recfromtxt(tileFile, names=True)
 	RA_tile = data['ra_center'] ### RA value of the telescope fields
 	Dec_tile = data['dec_center'] ### Dec values of the telescope fields
-	tile_index = data['ID']-1 ### Indexing the tiles
+	tile_index = data['ID'] ### Indexing the tiles
 
 	closestTileIndex = []
 
