@@ -29,12 +29,12 @@ from astropy.coordinates import get_moon
 from astropy.coordinates import get_body
 
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz
-from .ranked_tiling import RankedTileGenerator
+# from .ranked_tiling import RankedTileGenerator
 
 
 ############ UNDER CONSTRUCTION ############
 	
-class Scheduler(RankedTileGenerator):
+class Scheduler():
 	'''
 	The scheduler class: Inherits from the RankedTileGenerator class. If no attribute 
 	is supplied while creating schedular objects, a default instance of ZTF scheduler 
@@ -45,7 +45,7 @@ class Scheduler(RankedTileGenerator):
 	the second should be the tile center's ra value and the third the dec value of the 
 	same. The utcoffset is the time difference between UTC and the site in hours. 
 	'''
-	def __init__(self, skymapFile, configfile, astropy_site_location=None, outdir=None, resolution=None, logfile=None):
+	def __init__(self, configfile, ranked_tiles_csv, astropy_site_location=None, outdir=None, logfile=None):
 
 		configParser = configparser.ConfigParser()
 		configParser.read(configfile)
@@ -62,10 +62,9 @@ class Scheduler(RankedTileGenerator):
 			self.Observatory = EarthLocation.of_site(site)
 		
 		self.tileData = np.recfromtxt(self.tileCoord, names=True)
-		self.skymapfile = skymapFile
-		
-		self.tileObj = RankedTileGenerator(skymapFile, configfile)
-		df_ranked_tiles = self.tileObj.getRankedTiles(resolution=resolution)
+		# self.skymapfile = skymapFile
+		# self.tileObj = RankedTileGenerator(skymapFile, configfile)
+		df_ranked_tiles = pd.read_csv(ranked_tiles_csv, header=0, index_col=False)
 		self.tileIndices = df_ranked_tiles["tile_index"].values
 		self.tileProbs = df_ranked_tiles["tile_prob"].values
 
