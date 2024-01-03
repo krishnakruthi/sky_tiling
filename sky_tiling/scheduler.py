@@ -29,7 +29,6 @@ from astropy.coordinates import get_moon
 from astropy.coordinates import get_body
 
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz
-# from .ranked_tiling import RankedTileGenerator
 
 
 ############ UNDER CONSTRUCTION ############
@@ -62,8 +61,6 @@ class Scheduler():
 			self.Observatory = EarthLocation.of_site(site)
 		
 		self.tileData = np.recfromtxt(self.tileCoord, names=True)
-		# self.skymapfile = skymapFile
-		# self.tileObj = RankedTileGenerator(skymapFile, configfile)
 		df_ranked_tiles = pd.read_csv(ranked_tiles_csv, header=0, index_col=False)
 		self.tileIndices = df_ranked_tiles["tile_index"].values
 		self.tileProbs = df_ranked_tiles["tile_prob"].values
