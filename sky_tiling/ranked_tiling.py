@@ -79,8 +79,6 @@ class RankedTileGenerator:
 		preComputed_1024 = self.configParser.get('pixelTileMap', 'preComputed_1024')
 		preComputed_2048 = self.configParser.get('pixelTileMap', 'preComputed_2048')
 		
-
-		
 		self.skymap = hp.read_map(skymapfile)
 		npix = len(self.skymap)
 		self.nside = hp.npix2nside(npix)
