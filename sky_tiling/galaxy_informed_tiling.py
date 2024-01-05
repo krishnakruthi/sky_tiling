@@ -36,7 +36,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
         
     def append_tile_indices_to_catalog(self, galaxy_catalog, telescope):
             """
-            Append the tile index for each galaxy in the galaxy catalog
+            Append the telescope tile index for each galaxy in the galaxy catalog.
 
             Parameters:
             - galaxy_catalog (astropy Table): The catalog of galaxies
@@ -65,6 +65,36 @@ class GalaxyTileGenerator(RankedTileGenerator):
             return galaxy_catalog_new
     
     def get_ranked_galaxies():
+        """function that returns the ranked galaxies
+        """
         
+        return None
         
-    
+    def get_galaxy_informed_tiles(self, catalog_with_indices, telescope, csv_file_name):
+        """
+        Retrieves galaxy-informed tiles
+
+        Parameters:
+        - catalog_with_indices (astropy Table): The catalog with tile indices for the given telescope
+        - telescope (str): The telescope name.
+        - csv_file_name (str): The name of the CSV file to save the results.
+
+        Returns:
+        - df_summed_fields (DataFrame): The DataFrame containing the galaxy-informed tiles.
+        """
+        df_summed_fields = self.getRankedTiles().sort_values(by='tile_index')
+        df_summed_fields.reset_index(inplace=True, drop=True)
+        
+        df_summed_fields['tile_Mstar'] = np.full(len(df_summed_fields), np.nan)
+        df_summed_fields['tile_Mstar*tile_prob'] = np.full(len(df_summed_fields), np.nan)
+        
+        grouped_data = catalog_with_indices.group_by(telescope+'_tile_index')
+        tile_indices_from_catalog = grouped_data.groups.keys[telescope+'_tile_index']
+        df_summed_fields.loc[tile_indices_from_catalog, "tile_Mstar"] =  grouped_data['Mstar'].groups.aggregate(np.sum)
+        
+        df_summed_fields['tile_Mstar*tile_prob'] = df_summed_fields['tile_Mstar']*df_summed_fields['tile_prob']
+        
+        df_summed_fields.to_csv(csv_file_name, na_rep='NaN', index=False)
+        
+        return df_summed_fields
+        
