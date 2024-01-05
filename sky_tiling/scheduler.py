@@ -65,8 +65,8 @@ class Scheduler():
 		self.tileIndices = df_ranked_tiles["tile_index"].values
 		self.tileProbs = df_ranked_tiles["tile_prob"].values
 
-		self.tiles = SkyCoord(ra = self.tileData['ra_center'][self.tileIndices.astype(int)]*u.degree, 
-					    dec = self.tileData['dec_center'][self.tileIndices.astype(int)]*u.degree, 
+		self.tiles = SkyCoord(ra = self.tileData['ra_center']*u.degree, 
+					    dec = self.tileData['dec_center']*u.degree, 
 					    frame = 'icrs') ### Tile(s) 
 
 	def tileVisibility(self, time):
