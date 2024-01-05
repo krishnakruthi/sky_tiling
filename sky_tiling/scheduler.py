@@ -27,13 +27,14 @@ from astropy import units as u
 from astropy.coordinates import get_sun
 from astropy.coordinates import get_moon
 from astropy.coordinates import get_body
+from .ranked_tiling import RankedTileGenerator
 
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz
 
 
 ############ UNDER CONSTRUCTION ############
 	
-class Scheduler():
+class Scheduler(RankedTileGenerator):
 	'''
 	The scheduler class: Inherits from the RankedTileGenerator class. If no attribute 
 	is supplied while creating schedular objects, a default instance of ZTF scheduler 
@@ -65,8 +66,8 @@ class Scheduler():
 		self.tileIndices = df_ranked_tiles["tile_index"].values
 		self.tileProbs = df_ranked_tiles["tile_prob"].values
 
-		self.tiles = SkyCoord(ra = self.tileData['ra_center'][self.tileIndices.astype(int)]*u.degree, 
-					    dec = self.tileData['dec_center'][self.tileIndices.astype(int)]*u.degree, 
+		self.tiles = SkyCoord(ra = self.tileData['ra_center']*u.degree, 
+					    dec = self.tileData['dec_center']*u.degree, 
 					    frame = 'icrs') ### Tile(s) 
 
 	def tileVisibility(self, time):
@@ -77,7 +78,7 @@ class Scheduler():
 		time	:: The time at which observation is made. Assumes astropy Time object is passed.
 
 		'''
-		altAz_tile = self.tiles.transform_to(AltAz(obstime=time, location=self.Observatory))
+		altAz_tile = self.tiles[self.tileIndices.astype(int)].transform_to(AltAz(obstime=time, location=self.Observatory))
 		altAz_sun = get_sun(time).transform_to(AltAz(obstime=time, location=self.Observatory))
 		whichTilesUp = altAz_tile.alt.value > 30.0  ### Checks which tiles are up		
 
@@ -234,7 +235,8 @@ class Scheduler():
 			moon_decs = np.array(moon_dec)
 			moonTile = []
 			for moon_ra, moon_dec in zip(moon_ras, moon_decs):
-				moonTile.append(self.tileObj.sourceTile(moon_ra, moon_dec))
+				moonTile.append(self.sourceTile(moon_ra, moon_dec))
+
 
 			alttiles = np.array(alttiles)
 			moonTile = np.array(moonTile)

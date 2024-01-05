@@ -61,7 +61,7 @@ def getTileBounds(FOV, ra_cent, dec_cent):
 
 class RankedTileGenerator:
 		
-	def __init__(self, skymapfile, configfile, tileFile=None, outdir=None):
+	def __init__(self, configfile, skymapfile=None, tileFile=None, outdir=None):
 		'''
 		skymapfile :: The GW sky-localization map for the event
 		path	   :: Path to the preCoputed files
@@ -79,9 +79,13 @@ class RankedTileGenerator:
 		preComputed_1024 = self.configParser.get('pixelTileMap', 'preComputed_1024')
 		preComputed_2048 = self.configParser.get('pixelTileMap', 'preComputed_2048')
 		
-		self.skymap = hp.read_map(skymapfile)
-		npix = len(self.skymap)
-		self.nside = hp.npix2nside(npix)
+		if skymapfile is not None:
+			self.skymap = hp.read_map(skymapfile)
+			npix = len(self.skymap)
+			self.nside = hp.npix2nside(npix)
+		else:
+			print("No skymap file supplied")
+   
 		if tileFile is None:
 			tileFile = self.configParser.get('tileFiles', 'tileFile')
 		self.tileData = np.recfromtxt(tileFile, names=True)
@@ -221,7 +225,7 @@ class RankedTileGenerator:
 		ra_sorted = RA_tile[index]
 		dec_sorted = Dec_tile[index]
 
-  		include = np.cumsum(allTiles_probs_sorted) < CI
+		include = np.cumsum(allTiles_probs_sorted) < CI
 		include[np.sum(include)] = True
 		ra_CI_ranked = ra_sorted[include]
 		dec_CI_ranked = dec_sorted[include]
