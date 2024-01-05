@@ -172,7 +172,7 @@ class RankedTileGenerator:
 		return [searchedArea, coveredProb]
 
 	
-	def getRankedTiles(self, resolution=None, verbose=True, save_csv=False, tag=None):
+	def getRankedTiles(self, resolution=None, verbose=True, save_csv=False, tag=None, CI=0.9):
 		'''
 		METHOD		:: This method returns two numpy arrays, the first
 				   contains the tile indices of telescope and the second
@@ -218,7 +218,17 @@ class RankedTileGenerator:
 		RA_tile = self.tileData['ra_center']
 		allTiles_probs_sorted = allTiles_probs[index]
 		tile_index_sorted = tile_index[index]
-		self.df = pd.DataFrame({"tile_index": tile_index_sorted, "RA": RA_tile[index], "Dec": Dec_tile[index], "tile_prob" : allTiles_probs_sorted})
+		ra_sorted = RA_tile[index]
+		dec_sorted = Dec_tile[index]
+
+  		include = np.cumsum(allTiles_probs_sorted) < CI
+		include[np.sum(include)] = True
+		ra_CI_ranked = ra_sorted[include]
+		dec_CI_ranked = dec_sorted[include]
+		tile_index_CI_ranked = tile_index_sorted[include]
+		allTiles_probs_CI_ranked = allTiles_probs_sorted[include]
+  
+		self.df = pd.DataFrame({"tile_index": tile_index_CI_ranked, "RA": ra_CI_ranked, "Dec": dec_CI_ranked, "tile_prob" : allTiles_probs_CI_ranked})
 
 		if save_csv:
 			if tag is None: 

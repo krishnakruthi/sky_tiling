@@ -145,10 +145,10 @@ class Scheduler():
 				   
 		'''
 
-		includeTiles = np.cumsum(self.tileProbs) < CI
-		includeTiles[0] = True ## Always include the first tile ##
+		# includeTiles = np.cumsum(self.tileProbs) < CI
+		# includeTiles[0] = True ## Always include the first tile ##
 		
-		thresholdTileProb = self.tileProbs[includeTiles][-1]
+		# thresholdTileProb = self.tileProbs[includeTiles][-1]
 
 		observedTime = 0 ## Initiating the observed times ##
 		scheduled = np.array([]) ## tile indices scheduled for observation ##
@@ -182,7 +182,7 @@ class Scheduler():
 				for jj in np.arange(len(tileIndices)):
     			## out of all the visible tiles find the one that is above the probability threshold and not scheduled yet ##
 					if tileIndices[jj] not in scheduled:
-						if tileProbs[jj] >= thresholdTileProb:
+						# if tileProbs[jj] >= thresholdTileProb:
 							scheduled = np.append(scheduled, tileIndices[jj])
 							obs_tile_altAz.append(altAz_tile[jj])
 							ObsTimes.append(time_clock_astropy)
