@@ -31,8 +31,8 @@ from pathlib import Path
 
 class GalaxyTileGenerator(RankedTileGenerator):
 
-    def __init__(self, skymapfile, configfile, tileFile=None, outdir=None):        
-        super().__init__(skymapfile, configfile, tileFile=tileFile, outdir=outdir)
+    def __init__(self, configfile, skymapfile=None, tileFile=None, outdir=None):        
+        super().__init__(configfile, skymapfile=skymapfile, tileFile=tileFile, outdir=outdir)
         
     def append_tile_indices_to_catalog(self, galaxy_catalog, telescope):
             """
@@ -70,9 +70,9 @@ class GalaxyTileGenerator(RankedTileGenerator):
         
         return None
         
-    def get_galaxy_informed_tiles(self, catalog_with_indices, telescope, csv_file_name):
+    def get_galaxy_informed_tiles(self, catalog_with_indices, telescope,  save_csv=False, tag=None, CI=0.9):
         """
-        Retrieves galaxy-informed tiles
+        Reorders probability-ranked-tiles based on galaxy information.
 
         Parameters:
         - catalog_with_indices (astropy Table): The catalog with tile indices for the given telescope
@@ -82,19 +82,23 @@ class GalaxyTileGenerator(RankedTileGenerator):
         Returns:
         - df_summed_fields (DataFrame): The DataFrame containing the galaxy-informed tiles.
         """
-        df_summed_fields = self.getRankedTiles().sort_values(by='tile_index')
+        df_ranked_tiles = self.getRankedTiles(CI=CI)
+        df_summed_fields = df_ranked_tiles.sort_values(by='tile_index').copy()
         df_summed_fields.reset_index(inplace=True, drop=True)
         
         df_summed_fields['tile_Mstar'] = np.full(len(df_summed_fields), np.nan)
-        df_summed_fields['tile_Mstar*tile_prob'] = np.full(len(df_summed_fields), np.nan)
+        df_summed_fields['tile_Mstar_x_tile_prob'] = np.full(len(df_summed_fields), np.nan)
         
         grouped_data = catalog_with_indices.group_by(telescope+'_tile_index')
         tile_indices_from_catalog = grouped_data.groups.keys[telescope+'_tile_index']
         df_summed_fields.loc[tile_indices_from_catalog, "tile_Mstar"] =  grouped_data['Mstar'].groups.aggregate(np.sum)
         
-        df_summed_fields['tile_Mstar*tile_prob'] = df_summed_fields['tile_Mstar']*df_summed_fields['tile_prob']
+        df_summed_fields['tile_Mstar_x_tile_prob'] = df_summed_fields['tile_Mstar']*df_summed_fields['tile_prob']
         
-        df_summed_fields.to_csv(csv_file_name, na_rep='NaN', index=False)
+        if save_csv:
+            if tag is None: 
+                tag = self.configParser.get('plot', 'filenametag')
+            df_summed_fields.to_csv(self.outdir+tag+"_galaxy_informed_tiles.csv", index=False,  na_rep='NaN')
         
         return df_summed_fields
         

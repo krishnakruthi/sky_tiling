@@ -84,7 +84,7 @@ class RankedTileGenerator:
 			npix = len(self.skymap)
 			self.nside = hp.npix2nside(npix)
 		else:
-			print("No skymap file supplied")
+			print("Warning: No skymap file supplied")
    
 		if tileFile is None:
 			tileFile = self.configParser.get('tileFiles', 'tileFile')
