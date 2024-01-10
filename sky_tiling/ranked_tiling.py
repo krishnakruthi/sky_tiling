@@ -226,7 +226,13 @@ class RankedTileGenerator:
 		dec_sorted = Dec_tile[index]
   
 		include = np.cumsum(allTiles_probs_sorted) < CI
-		include[np.sum(include)] = True
+		if len(include) == np.sum(include):
+			# when CI = 1, include all tiles
+			include[np.sum(include)-1] = True
+		else:
+			# for CI != 1, include one additional tile
+			include[np.sum(include)] = True
+
 		ra_CI_ranked = ra_sorted[include]
 		dec_CI_ranked = dec_sorted[include]
 		tile_index_CI_ranked = tile_index_sorted[include]
