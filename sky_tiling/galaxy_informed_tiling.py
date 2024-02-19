@@ -48,7 +48,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
             RA_tile = self.tileData['ra_center'] 
             Dec_tile = self.tileData['dec_center']
             galaxy_catalog_new = galaxy_catalog.copy()
-            galaxy_catalog_new[telescope + "tile_index"] = np.full(len(galaxy_catalog_new), np.nan)
+            galaxy_catalog_new[telescope + "_tile_index"] = np.full(len(galaxy_catalog_new), np.nan)
             with ProgressBar(len(galaxy_catalog_new)) as bar:
                 for row in galaxy_catalog_new:
                     ra = row['ra']
