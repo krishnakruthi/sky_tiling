@@ -70,30 +70,39 @@ class GalaxyTileGenerator(RankedTileGenerator):
         
         return None
         
-    def get_galaxy_informed_tiles(self, catalog_with_indices, telescope, sort_metric = 'Mstar', save_csv=False, tag=None, CI=0.9):
+    def get_galaxy_informed_tiles(self, catalog_with_indices, telescope, sort_metric = 'Mstar', sort_by_metric_times_tile_prob = False, save_csv=False, tag=None, CI=0.9):
         """
         Reorders probability-ranked-tiles based on galaxy information.
 
         Parameters:
         - catalog_with_indices (astropy Table): The catalog with tile indices for the given telescope
         - telescope (str): The telescope name.
+        - sort_metric (str): The galaxy property to sort the tiles by. The string has to be a column in the galaxy catalog.
+        - sort_by_metric_times_tile_prob (bool): If True, the tiles are sorted by the product of the galaxy property specified and the tile probability. Default is False.
         - csv_file_name (str): The name of the CSV file to save the results.
 
         Returns:
         - df_summed_fields (DataFrame): The DataFrame containing the galaxy-informed tiles.
         """
-        df_ranked_tiles = self.getRankedTiles(CI=CI)
-        df_summed_fields = df_ranked_tiles.sort_values(by='tile_index').copy()
-        df_summed_fields.reset_index(inplace=True, drop=True)
-        df_summed_fields['tile_'+sort_metric] = np.full(len(df_summed_fields), np.nan)
-        grouped_data = catalog_with_indices.group_by(telescope+'_tile_index')
-        sum_by_sort_metric = grouped_data[sort_metric].groups.aggregate(np.sum)
-        df_summed_fields['tile_'+sort_metric] = sum_by_sort_metric[df_summed_fields['tile_index']]
+        df_ranked_tiles = self.getRankedTiles(CI=CI) #get ranked tiles within CI area
+        df_summed_fields = df_ranked_tiles.copy()
+        grouped_data = catalog_with_indices.group_by(telescope+'_tile_index') #group galaxies by telescope tile index
+        sum_by_sort_metric = grouped_data[sort_metric].groups.aggregate(np.sum) #add up "sort_metric" within tile index
+        # the summed values of tile_index in row1 gets assigned to row1 of df_summed_fields
+        df_summed_fields['tile_'+sort_metric] = sum_by_sort_metric[df_summed_fields['tile_index']] 
         df_summed_fields['tile_'+sort_metric+'*tile_prob'] = df_summed_fields['tile_Mstar']*df_summed_fields['tile_prob']
+        
+        if sort_by_metric_times_tile_prob:
+            final_sorting_metric = 'tile_'+sort_metric+'*tile_prob'
+        else:
+            final_sorting_metric = 'tile_'+sort_metric
+        
+        print("Sorting by: ", final_sorting_metric)
+        df_summed_fields.sort_values(by=final_sorting_metric, ascending=False, inplace=True, ignore_index=True)
         
         if save_csv:
             if tag is None: 
                 tag = self.configParser.get('plot', 'filenametag')
             df_summed_fields.to_csv(self.outdir+tag+"_galaxy_informed_tiles.csv", index=False,  na_rep='NaN')
         
-        return df_summed_fields 
+        return df_summed_fields
