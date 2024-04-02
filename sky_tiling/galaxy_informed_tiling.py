@@ -8,69 +8,131 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import healpy as hp
 import numpy as np
-import scipy
-import os
-import pickle
 import numpy as np
 import pandas as pd
-
-import healpy as hp
-import configparser
-from scipy import interpolate
 import matplotlib.pyplot as plt
-
 from astropy import units as u
 from astropy.table import Table
 from astropy.utils.console import ProgressBar
 from .utilities import AllSkyMap_basic
 from .ranked_tiling import RankedTileGenerator
 from astropy.utils.console import ProgressBar
-import importlib.resources
+from ligo.skymap.io import read_sky_map
+from ligo.skymap.postprocess import crossmatch
 from pathlib import Path
+
+
+def crossmatch_galaxies(ra, dec, dist_mpc, galaxy_catalog, skymapfile, CI=0.9, save_csv=False,
+                        tag = "crossmatched_catalog"):
+    """
+    Crossmatches the galaxy catalog with the skymapfile.
+
+    Parameters:
+    - ra (array-like): Array of right ascension values of galaxies.
+    - dec (array-like): Array of declination values of galaxies.
+    - dist_mpc (array-like): Array of distance values of galaxies in megaparsecs.
+    - galaxy_catalog (astropy Table): Table containing the galaxy catalog.
+    - skymapfile (str): Path to the skymap file.
+    - CI (float): The skymap confidence interval for the crossmatch. Default is 0.9.
+    - save_csv (bool): If True, the crossmatched catalog is saved as a CSV file.
+    - tag (str): The tag to be used for the saved CSV file.
+
+    Returns:
+    - result: ligo.skymap.postprocess.crossmatch.CrossmatchResult
+    """
+    
+    skymap = read_sky_map(skymapfile, moc=True)
+    coordinates = SkyCoord(ra, dec, dist_mpc, unit=(u.deg, u.deg, u.Mpc))
+    result = crossmatch(skymap, coordinates)
+    CI_cutoff = result.searched_prob_vol < CI
+    galaxy_catalog_CI = galaxy_catalog[CI_cutoff]
+    galaxy_catalog_CI["dP_dA"] = result.probdensity[CI_cutoff]
+    galaxy_catalog_CI["dP_dV"] = result.probdensity_vol[CI_cutoff]
+    galaxy_catalog_CI["P_2D"] = result.searched_prob[CI_cutoff] #this is not tile probability
+    galaxy_catalog_CI["P_3D"] = result.searched_prob_vol[CI_cutoff]
+    
+    if save_csv:
+        galaxy_catalog_CI.write(tag+".csv", format='ascii.csv')
+    
+    return galaxy_catalog_CI
 
 
 class GalaxyTileGenerator(RankedTileGenerator):
 
     def __init__(self, configfile, skymapfile=None, tileFile=None, outdir=None):        
         super().__init__(configfile, skymapfile=skymapfile, tileFile=tileFile, outdir=outdir)
+        self.skymapfile = skymapfile
         
     def append_tile_indices_to_catalog(self, galaxy_catalog, telescope):
-            """
-            Append the telescope tile index for each galaxy in the galaxy catalog.
+        """
+        Append the telescope tile index for each galaxy in the galaxy catalog.
 
-            Parameters:
-            - galaxy_catalog (astropy Table): The catalog of galaxies
-            - telescope (str): The name of the telescope; should be the same as the config file.
+        Parameters:
+        - galaxy_catalog (astropy Table): The catalog of galaxies
+        - telescope (str): The name of the telescope; should be the same as the config file.
 
-            Returns:
-            - astropy Table: The updated galaxy catalog with "<telescope>_tile_index" column appended
-            """
-            RA_tile = self.tileData['ra_center'] 
-            Dec_tile = self.tileData['dec_center']
-            galaxy_catalog_new = galaxy_catalog.copy()
-            galaxy_catalog_new[telescope + "_tile_index"] = np.full(len(galaxy_catalog_new), np.nan)
-            with ProgressBar(len(galaxy_catalog_new)) as bar:
-                for row in galaxy_catalog_new:
-                    ra = row['ra']
-                    dec = row['dec']
-                    s = np.arccos( np.sin(np.pi*dec/180.)\
-                        * np.sin(np.pi*Dec_tile/180.)\
-                        + np.cos(np.pi*dec/180.)\
-                        * np.cos(np.pi*Dec_tile/180.) \
-                        * np.cos(np.pi*(RA_tile - ra)/180.) )
-                    closestTileIndex = np.argmin(s) ### minimum angular distance index
-                    row[telescope + "_tile_index"] = closestTileIndex
-                    bar.update()
-                    
-            return galaxy_catalog_new
+        Returns:
+        - astropy Table: The updated galaxy catalog with "<telescope>_tile_index" column appended
+        """
+        RA_tile = self.tileData['ra_center'] 
+        Dec_tile = self.tileData['dec_center']
+        galaxy_catalog_new = galaxy_catalog.copy()
+        galaxy_catalog_new[telescope + "_tile_index"] = np.full(len(galaxy_catalog_new), np.nan)
+        with ProgressBar(len(galaxy_catalog_new)) as bar:
+            for row in galaxy_catalog_new:
+                ra = row['ra']
+                dec = row['dec']
+                s = np.arccos( np.sin(np.pi*dec/180.)\
+                    * np.sin(np.pi*Dec_tile/180.)\
+                    + np.cos(np.pi*dec/180.)\
+                    * np.cos(np.pi*Dec_tile/180.) \
+                    * np.cos(np.pi*(RA_tile - ra)/180.) )
+                closestTileIndex = np.argmin(s) ### minimum angular distance index
+                row[telescope + "_tile_index"] = closestTileIndex
+                bar.update()
+                        
+        return galaxy_catalog_new
     
-    def get_ranked_galaxies():
-        """function that returns the ranked galaxies
+    
+    
+    def get_galaxy_targeted_tiles(self, cat_with_indices, telescope, unique_tiles = True, sort_metric = 'Mstar', 
+                                  sort_by_metric_times_P_3D = False, save_csv=False, CI=0.9):
         """
         
-        return None
+        """
         
-    def get_galaxy_informed_tiles(self, catalog_with_indices, telescope, sort_metric = 'Mstar', sort_by_metric_times_tile_prob = False, save_csv=False, tag=None, CI=0.9):
+        crossmatched_cat_with_indices = crossmatch_galaxies(cat_with_indices['ra'], cat_with_indices['dec'], cat_with_indices['DistMpc'], cat_with_indices, self.skymapfile, CI=CI)
+        
+        if sort_by_metric_times_P_3D:
+            sort_metric_final = 'P_3D_'+sort_metric 
+            crossmatched_cat_with_indices[sort_metric_final] = crossmatched_cat_with_indices['P_3D']*crossmatched_cat_with_indices[sort_metric]
+        else:
+            sort_metric_final = sort_metric  
+        
+        df_gal_targeted = crossmatched_cat_with_indices[telescope+'_tile_index', "objname", sort_metric_final].to_pandas()
+        df_gal_targeted.sort_values(by=sort_metric_final, ascending=False, inplace=True, ignore_index=True)
+    
+        if unique_tiles:
+            df_gal_targeted.drop_duplicates(subset=[telescope+'_tile_index'], inplace=True)
+            tag = '_unique_'
+            print("Warning: unique_tiles is set to True. Only the first galaxy info in each tile is show.")
+        
+        RA_tile = self.tileData['ra_center'] 
+        Dec_tile = self.tileData['dec_center']
+        selected_tile_indices = df_gal_targeted[telescope+'_tile_index'].values
+        df_gal_targeted["RA"] = RA_tile[selected_tile_indices.astype(int)]
+        df_gal_targeted["Dec"] = Dec_tile[selected_tile_indices.astype(int)]
+        df_gal_targeted.rename(columns={telescope+'_tile_index': 'tile_index'}, inplace=True)
+        df_gal_targeted['objname'] = df_gal_targeted['objname'].str.decode("utf-8")
+        
+        if save_csv:
+            df_gal_targeted.to_csv(self.outdir+telescope+tag+"galaxy_targeted_tiles.csv", index=False,  na_rep='NaN')
+        
+        return df_gal_targeted
+    
+        
+    def get_galaxy_informed_tiles(self, catalog_with_indices, telescope, sort_metric = 'Mstar',  CI=0.9,
+                                  sort_by_metric_times_tile_prob = False, save_csv=False, tag=None):
         """
         Reorders probability-ranked-tiles based on galaxy information.
 
