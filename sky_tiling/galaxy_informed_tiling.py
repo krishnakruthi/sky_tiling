@@ -51,6 +51,18 @@ def crossmatch_galaxies(ra, dec, dist_mpc, galaxy_catalog, skymapfile, CI=0.9, s
     galaxy_catalog_CI["P_2D"] = result.searched_prob[CI_cutoff] #this is not tile probability
     galaxy_catalog_CI["P_3D"] = result.searched_prob_vol[CI_cutoff]
     
+    area_cutoff = result.searched_prob < CI
+    sm, meta = read_sky_map(skymapfile)
+    cat_area_cutoff = galaxy_catalog[area_cutoff]
+    cat_area_cutoff = cat_area_cutoff[cat_area_cutoff["DistMpc"] < meta["distmean"]+ 3*meta["diststd"]]
+    sum_Mstar = cat_area_cutoff["Mstar"].sum()
+    sum_SFR = cat_area_cutoff["SFR_W4"].sum()
+    sum_Lum_W1 = cat_area_cutoff["Lum_W1"].sum()
+    
+    galaxy_catalog_CI["P_Mstar"] = galaxy_catalog_CI["Mstar"]/sum_Mstar
+    galaxy_catalog_CI["P_SFR_W4"] = galaxy_catalog_CI["SFR_W4"]/sum_SFR
+    galaxy_catalog_CI["P_Lum_W1"] = galaxy_catalog_CI["Lum_W1"]/sum_Lum_W1
+    
     if save_csv:
         galaxy_catalog_CI.write(tag+".csv", format='ascii.csv')
     
@@ -96,7 +108,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
 
 
     def get_galaxy_targeted_tiles(self, cat_with_indices, telescope, unique_tiles = True, sort_metric = 'Mstar', 
-                                  sort_by_metric_times_P_3D = False, save_csv=False, CI=0.9):
+                                  sort_by_metric_times_P_3D = False, save_csv=False, CI=0.9, save_crossmatched_csv = False):
         """
         Retrieves galaxy-targeted tiles based on a galaxy catalog with telescope tile indices appended. 
         Currently only supports NED-LVS [Cook et. al (2023), 10.26132/NED8]
@@ -118,13 +130,12 @@ class GalaxyTileGenerator(RankedTileGenerator):
         
         """
         
-        crossmatched_cat_with_indices = crossmatch_galaxies(cat_with_indices['ra'], cat_with_indices['dec'], cat_with_indices['DistMpc'], cat_with_indices, self.skymapfile, CI=CI)
+        crossmatched_cat_with_indices = crossmatch_galaxies(cat_with_indices['ra'], cat_with_indices['dec'], cat_with_indices['DistMpc'], cat_with_indices, self.skymapfile, CI=CI, save_csv=save_crossmatched_csv)
         
         if sort_by_metric_times_P_3D:
-            sort_metric_final = 'P_3D_'+sort_metric 
-            crossmatched_cat_with_indices[sort_metric_final] = crossmatched_cat_with_indices['P_3D']*crossmatched_cat_with_indices[sort_metric]
+            sort_metric_final = 'P_3D_'+sort_metric
         else:
-            sort_metric_final = sort_metric  
+            sort_metric_final = 'P_'+sort_metric
         
         df_gal_targeted = crossmatched_cat_with_indices[telescope+'_tile_index', "objname", sort_metric_final].to_pandas()
         df_gal_targeted.sort_values(by=sort_metric_final, ascending=False, inplace=True, ignore_index=True)
