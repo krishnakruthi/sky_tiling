@@ -93,11 +93,28 @@ class GalaxyTileGenerator(RankedTileGenerator):
                         
         return galaxy_catalog_new
     
-    
-    
+
+
     def get_galaxy_targeted_tiles(self, cat_with_indices, telescope, unique_tiles = True, sort_metric = 'Mstar', 
                                   sort_by_metric_times_P_3D = False, save_csv=False, CI=0.9):
         """
+        Retrieves galaxy-targeted tiles based on a galaxy catalog with telescope tile indices appended. 
+        Currently only supports NED-LVS [Cook et. al (2023), 10.26132/NED8]
+
+        Parameters:
+        - cat_with_indices (astropy Table): Galaxy catalog table containing columns - 'ra', 'dec', 'DistMpc', and telescope tile indices
+        - telescope (str): Name of the telescope.
+        - unique_tiles (bool): Flag indicating whether to return only unique tiles. Default is True.
+        - sort_metric (str): Metric used for sorting the tiles. Default is 'Mstar'.
+        - sort_by_metric_times_P_3D (bool): Flag indicating whether to sort by the product of the metric and P_3D. Default is False.
+        - save_csv (bool): Flag indicating whether to save the resulting dataframe as a CSV file. Default is False.
+        - CI (float): Confidence interval for crossmatching galaxies. Default is 0.9.
+
+        Returns:
+        - df_gal_targeted (DataFrame): DataFrame containing the galaxy-targeted tiles, including 'tile_index', 'objname', 'RA', and 'Dec'.
+
+        Note:
+        - If unique_tiles is set to True, only the first galaxy info in each tile is shown.
         
         """
         
