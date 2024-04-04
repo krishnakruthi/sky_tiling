@@ -25,7 +25,8 @@ from pathlib import Path
 def crossmatch_galaxies(ra, dec, dist_mpc, galaxy_catalog, skymapfile, CI=0.9, save_csv=False,
                         tag = "crossmatched_catalog"):
     """
-    Crossmatches the galaxy catalog with the skymapfile.
+    Crossmatches the galaxy catalog with the skymapfile. The output file is similar to NED-LVS GWF 
+    Service (https://ned.ipac.caltech.edu/NED::GWFoverview/).
 
     Parameters:
     - ra (array-like): Array of right ascension values of galaxies.
@@ -64,7 +65,7 @@ def crossmatch_galaxies(ra, dec, dist_mpc, galaxy_catalog, skymapfile, CI=0.9, s
     galaxy_catalog_CI["P_Lum_W1"] = galaxy_catalog_CI["Lum_W1"]/sum_Lum_W1
     
     if save_csv:
-        galaxy_catalog_CI.write(tag+".csv", format='ascii.csv')
+        galaxy_catalog_CI.write(tag+".csv", format='ascii.csv', overwrite=True)
     
     return galaxy_catalog_CI
 
