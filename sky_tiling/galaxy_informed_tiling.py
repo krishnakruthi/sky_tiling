@@ -143,8 +143,8 @@ class GalaxyTileGenerator(RankedTileGenerator):
     
         if unique_tiles:
             df_gal_targeted.drop_duplicates(subset=[telescope+'_tile_index'], inplace=True)
-            tag = '_unique_'
-            print("Warning: unique_tiles is set to True. Only the first galaxy info in each tile is show.")
+            tag = '_unique'
+            print("Warning: unique_tiles is set to True. Only the first galaxy info in each tile is shown.")
         
         RA_tile = self.tileData['ra_center'] 
         Dec_tile = self.tileData['dec_center']
@@ -155,7 +155,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
         df_gal_targeted['objname'] = df_gal_targeted['objname'].str.decode("utf-8")
         
         if save_csv:
-            df_gal_targeted.to_csv(self.outdir+telescope+"galaxy_targeted_tiles"+tag+".csv", index=False,  na_rep='NaN')
+            df_gal_targeted.to_csv(self.outdir+telescope+"_galaxy_targeted_tiles"+tag+".csv", index=False,  na_rep='NaN')
         
         return df_gal_targeted
     
