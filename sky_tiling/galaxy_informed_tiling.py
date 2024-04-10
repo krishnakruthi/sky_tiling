@@ -161,7 +161,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
     
         
     def get_galaxy_informed_tiles(self, catalog_with_indices, telescope, sort_metric = 'Mstar',  CI=0.9,
-                                  sort_by_metric_times_tile_prob = False, save_csv=False, tag=None):
+                                  sort_by_metric_times_tile_prob = False, save_csv=False, tag=None, res=256):
         """
         Reorders probability-ranked-tiles based on galaxy information.
 
@@ -175,13 +175,15 @@ class GalaxyTileGenerator(RankedTileGenerator):
         Returns:
         - df_summed_fields (DataFrame): The DataFrame containing the galaxy-informed tiles.
         """
-        df_ranked_tiles = self.getRankedTiles(CI=CI) #get ranked tiles within CI area
+        df_ranked_tiles = self.getRankedTiles(CI=CI, resolution=res) #get ranked tiles within CI area
         df_summed_fields = df_ranked_tiles.copy()
         grouped_data = catalog_with_indices.group_by(telescope+'_tile_index') #group galaxies by telescope tile index
         sum_by_sort_metric = grouped_data[sort_metric].groups.aggregate(np.sum) #add up "sort_metric" within tile index
-        # the summed values of tile_index in row1 gets assigned to row1 of df_summed_fields
-        df_summed_fields['tile_'+sort_metric] = sum_by_sort_metric[df_summed_fields['tile_index']] 
-        df_summed_fields['tile_'+sort_metric+'*tile_prob'] = df_summed_fields['tile_Mstar']*df_summed_fields['tile_prob']
+        tile_indices_grouped = grouped_data.groups.keys[telescope+'_tile_index']
+        df_summed_indices = df_summed_fields["tile_index"].values
+        indices = np.searchsorted(tile_indices_grouped, df_summed_indices)
+        df_summed_fields['tile_'+sort_metric] = sum_by_sort_metric[indices] 
+        df_summed_fields['tile_'+sort_metric+'*tile_prob'] = df_summed_fields['tile_'+sort_metric]*df_summed_fields['tile_prob']
         
         if sort_by_metric_times_tile_prob:
             final_sorting_metric = 'tile_'+sort_metric+'*tile_prob'
