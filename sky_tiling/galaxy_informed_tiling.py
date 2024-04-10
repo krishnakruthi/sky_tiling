@@ -108,8 +108,8 @@ class GalaxyTileGenerator(RankedTileGenerator):
     
 
 
-    def get_galaxy_targeted_tiles(self, cat_with_indices, telescope, unique_tiles = True, sort_metric = 'Mstar', 
-                                  sort_by_metric_times_P_3D = False, save_csv=False, CI=0.9, save_crossmatched_csv = False):
+    def get_galaxy_targeted_tiles(self, cat_with_indices, telescope, unique_tiles = True, sort_metric = 'Mstar', CI=0.9,
+                                  sort_by_metric_times_P_3D = False, save_csv=False, save_crossmatched_csv = False):
         """
         Retrieves galaxy-targeted tiles based on a galaxy catalog with telescope tile indices appended. 
         Currently only supports NED-LVS [Cook et. al (2023), 10.26132/NED8]
@@ -155,7 +155,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
         df_gal_targeted['objname'] = df_gal_targeted['objname'].str.decode("utf-8")
         
         if save_csv:
-            df_gal_targeted.to_csv(self.outdir+telescope+tag+"galaxy_targeted_tiles.csv", index=False,  na_rep='NaN')
+            df_gal_targeted.to_csv(self.outdir+telescope+"galaxy_targeted_tiles"+tag+".csv", index=False,  na_rep='NaN')
         
         return df_gal_targeted
     
