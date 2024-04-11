@@ -65,6 +65,8 @@ class Scheduler(RankedTileGenerator):
 		df_ranked_tiles = pd.read_csv(ranked_tiles_csv, header=0, index_col=False)
 		self.tileIndices = df_ranked_tiles["tile_index"].values
 		self.tileProbs = df_ranked_tiles["tile_prob"].values
+		self.Mstar = df_ranked_tiles["tile_Mstar"].values
+		self.Mstar_times_prob = df_ranked_tiles["tile_Mstar*tile_prob"].values
 
 		self.tiles = SkyCoord(ra = self.tileData['ra_center']*u.degree, 
 					    dec = self.tileData['dec_center']*u.degree, 
@@ -83,7 +85,8 @@ class Scheduler(RankedTileGenerator):
 		whichTilesUp = altAz_tile.alt.value > 30.0  ### Checks which tiles are up		
 
         #return [altAz_tile, self.tileProbs, altAz_sun]
-		return [self.tileIndices[whichTilesUp], self.tileProbs[whichTilesUp], altAz_tile[whichTilesUp], altAz_sun]
+		return [self.tileIndices[whichTilesUp], self.tileProbs[whichTilesUp],  self.Mstar[whichTilesUp], 
+          						self.Mstar_times_prob[whichTilesUp], altAz_tile[whichTilesUp], altAz_sun]
 		
 
 	def advanceToSunset(self, eventTime, intTime):
@@ -162,10 +165,12 @@ class Scheduler(RankedTileGenerator):
 		moon_dec = []
 		lunar_illumination = []
 		moon_altitude = []
+		mstar_observed = []
+		mstar_prob_observed = []
 		
 		## time clock initialization ##
 		time_clock_astropy = Time(eventTime + latency, format='gps')
-		[_, _, _, altAz_sun] = self.tileVisibility(time_clock_astropy)
+		[_, _, _, _, _, altAz_sun] = self.tileVisibility(time_clock_astropy)
 
 		## Checking and logging if sun is up; advancing to sunset ##
 		if altAz_sun.alt.value >= -18.0: 
@@ -177,7 +182,7 @@ class Scheduler(RankedTileGenerator):
 		
 		## Start scheduling observations ##
 		while observedTime <= duration: 
-			[tileIndices, tileProbs, altAz_tile, altAz_sun] = self.tileVisibility(time_clock_astropy)
+			[tileIndices, tileProbs, mstar, mstar_prob, altAz_tile, altAz_sun] = self.tileVisibility(time_clock_astropy)
 			## check if sun is still down; not so relevant for the very first observation ##
 			if altAz_sun.alt.value < -18.0:
 				for jj in np.arange(len(tileIndices)):
@@ -188,6 +193,8 @@ class Scheduler(RankedTileGenerator):
 							obs_tile_altAz.append(altAz_tile[jj])
 							ObsTimes.append(time_clock_astropy)
 							pVal_observed.append(tileProbs[jj])
+							mstar_observed.append(mstar[jj])
+							mstar_prob_observed.append(mstar_prob[jj])
 							Sun = get_sun(time_clock_astropy)
 							sun_ra.append(Sun.ra.value)
 							sun_dec.append(Sun.dec.value)
@@ -267,9 +274,10 @@ class Scheduler(RankedTileGenerator):
 
 
 			slewDist = np.array(slewDist)
-			df = pd.DataFrame(np.vstack((tile_obs_times, scheduled.astype('int'), self.tileData['ra_center'][scheduled.astype('int')], self.tileData['dec_center'][scheduled.astype('int')], pVal_observed, slewDist,\
-											airmass, moonTile, moonTileDist, moonDist, lunar_illumination, np.array(moon_altitude))).T, columns=['Observation_Time', 'Tile_Index', 'RA', 'Dec', 'Tile_Probs', 'Slew Angle (deg)','Air_Mass', 
-										    'Lunar-tile', 'Lunar-tile separation (deg)', 'Lunar separation (deg)', 'Lunar_Illumination', 'Lunar_altitude'])
+			df = pd.DataFrame(np.vstack((tile_obs_times, scheduled.astype('int'), self.tileData['ra_center'][scheduled.astype('int')], self.tileData['dec_center'][scheduled.astype('int')], 
+                                pVal_observed, mstar_observed, mstar_prob_observed ,slewDist, airmass, moonTile, moonTileDist, moonDist, lunar_illumination, np.array(moon_altitude))).T, 
+                     			columns=['Observation_Time', 'Tile_Index', 'RA', 'Dec', 'tile_prob', 'tile_Mstar', 'tile_Mstar*tile_prob', 'Slew Angle (deg)','Air_Mass', 
+                                'Lunar-tile', 'Lunar-tile separation (deg)', 'Lunar separation (deg)', 'Lunar_Illumination', 'Lunar_altitude'])
 
 			if save_schedule:
 				if tag is None: 
