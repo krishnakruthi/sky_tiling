@@ -154,6 +154,10 @@ class GalaxyTileGenerator(RankedTileGenerator):
         df_gal_targeted.rename(columns={telescope+'_tile_index': 'tile_index'}, inplace=True)
         df_gal_targeted['objname'] = df_gal_targeted['objname'].str.decode("utf-8")
         
+        df_gal_targeted["tile_prob"] = np.nan
+        df_gal_targeted["tile_Mstar"] = np.nan
+        df_gal_targeted["tile_Mstar*tile_prob"] = np.nan
+        
         if save_csv:
             df_gal_targeted.to_csv(self.outdir+telescope+"_galaxy_targeted_tiles"+tag+".csv", index=False,  na_rep='NaN')
         
