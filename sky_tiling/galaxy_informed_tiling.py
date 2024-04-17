@@ -164,7 +164,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
         return df_gal_targeted
     
         
-    def get_galaxy_informed_tiles(self, catalog_with_indices, telescope, sort_metric = 'Mstar',  CI=0.9,
+    def get_galaxy_informed_tiles(self, cat_with_indices, telescope, sort_metric = 'P_Mstar',  CI=0.9,
                                   sort_by_metric_times_tile_prob = False, save_csv=False, tag=None, res=256):
         """
         Reorders probability-ranked-tiles based on galaxy information.
@@ -179,6 +179,9 @@ class GalaxyTileGenerator(RankedTileGenerator):
         Returns:
         - df_summed_fields (DataFrame): The DataFrame containing the galaxy-informed tiles.
         """
+        catalog_with_indices = crossmatch_galaxies(cat_with_indices['ra'], cat_with_indices['dec'], cat_with_indices['DistMpc'], 
+                                                   cat_with_indices, self.skymapfile, CI=0.99) #note the 0.99 CI here
+        
         df_ranked_tiles = self.getRankedTiles(CI=CI, resolution=res) #get ranked tiles within CI area
         df_summed_fields = df_ranked_tiles.copy()
         grouped_data = catalog_with_indices.group_by(telescope+'_tile_index') #group galaxies by telescope tile index
