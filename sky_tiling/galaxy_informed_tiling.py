@@ -23,7 +23,7 @@ from pathlib import Path
 
 
 def crossmatch_galaxies(ra, dec, dist_mpc, galaxy_catalog, skymapfile, CI=0.9, save_csv=False,
-                        tag = "crossmatched_catalog"):
+                        tag = "crossmatched_catalog", outdir=""):
     """
     Crossmatches the galaxy catalog with the skymapfile. The output file is similar to NED-LVS GWF 
     Service (https://ned.ipac.caltech.edu/NED::GWFoverview/).
@@ -65,7 +65,7 @@ def crossmatch_galaxies(ra, dec, dist_mpc, galaxy_catalog, skymapfile, CI=0.9, s
     galaxy_catalog_CI["P_Lum_W1"] = galaxy_catalog_CI["Lum_W1"]/sum_Lum_W1
     
     if save_csv:
-        galaxy_catalog_CI.write(tag+".csv", format='ascii.csv', overwrite=True)
+        galaxy_catalog_CI.write(outdir+tag+".csv", format='ascii.csv', overwrite=True)
     
     return galaxy_catalog_CI
 
@@ -109,7 +109,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
 
 
     def get_galaxy_targeted_tiles(self, cat_with_indices, telescope, unique_tiles = True, sort_metric = 'Mstar', CI=0.9,
-                                  sort_by_metric_times_P_3D = False, save_csv=False, save_crossmatched_csv = False):
+                                  sort_by_metric_times_P_3D = False, save_csv=False, save_crossmatched_csv = False, tag=""):
         """
         Retrieves galaxy-targeted tiles based on a galaxy catalog with telescope tile indices appended. 
         Currently only supports NED-LVS [Cook et. al (2023), 10.26132/NED8]
@@ -131,7 +131,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
         
         """
         
-        crossmatched_cat_with_indices = crossmatch_galaxies(cat_with_indices['ra'], cat_with_indices['dec'], cat_with_indices['DistMpc'], cat_with_indices, self.skymapfile, CI=CI, save_csv=save_crossmatched_csv)
+        crossmatched_cat_with_indices = crossmatch_galaxies(cat_with_indices['ra'], cat_with_indices['dec'], cat_with_indices['DistMpc'], cat_with_indices, self.skymapfile, CI=CI, save_csv=save_crossmatched_csv, outdir=self.outdir)
         
         if sort_by_metric_times_P_3D:
             sort_metric_final = 'P_3D_'+sort_metric
@@ -143,7 +143,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
     
         if unique_tiles:
             df_gal_targeted.drop_duplicates(subset=[telescope+'_tile_index'], inplace=True)
-            tag = '_unique'
+            tag = '_unique'+tag
             print("Warning: unique_tiles is set to True. Only the first galaxy info in each tile is shown.")
         
         RA_tile = self.tileData['ra_center'] 
@@ -180,7 +180,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
         - df_summed_fields (DataFrame): The DataFrame containing the galaxy-informed tiles.
         """
         catalog_with_indices = crossmatch_galaxies(cat_with_indices['ra'], cat_with_indices['dec'], cat_with_indices['DistMpc'], 
-                                                   cat_with_indices, self.skymapfile, CI=0.99) #note the 0.99 CI here
+                                                   cat_with_indices, self.skymapfile, outdir=self.outdir, CI=0.99) #note the 0.99 CI here
         
         df_ranked_tiles = self.getRankedTiles(CI=CI, resolution=res) #get ranked tiles within CI area
         df_summed_fields = df_ranked_tiles.copy()
