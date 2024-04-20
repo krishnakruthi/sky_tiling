@@ -180,7 +180,7 @@ class GalaxyTileGenerator(RankedTileGenerator):
         - df_summed_fields (DataFrame): The DataFrame containing the galaxy-informed tiles.
         """
         catalog_with_indices = crossmatch_galaxies(cat_with_indices['ra'], cat_with_indices['dec'], cat_with_indices['DistMpc'], 
-                                                   cat_with_indices, self.skymapfile, outdir=self.outdir, CI=0.99) #note the 0.99 CI here
+                                                   cat_with_indices, self.skymapfile, outdir=self.outdir, CI=CI+0.1) #note the +0.1 CI here
         
         df_ranked_tiles = self.getRankedTiles(CI=CI, resolution=res) #get ranked tiles within CI area
         df_summed_fields = df_ranked_tiles.copy()
