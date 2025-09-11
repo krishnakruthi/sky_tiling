@@ -1,0 +1,10 @@
+astropy
+emcee
+healpy
+ligo.skymap
+matplotlib
+numpy
+pandas
+scipy
+setuptools
+basemap
