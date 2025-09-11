@@ -30,13 +30,20 @@ python setup.py install
 pip install -e .
 ```
 
-Now `sky_tiling` can be imported as a Python module.
+`sky_tiling` can be imported as a Python module. 
+
+## Usage
+To use `sky_tiling` for a particular telescope, you need three things:
+1. **`tile_center_files/`** – contains the coordinates of the center of each tile for a telescope.
+2. **`tile_pixel_maps/`** – maps each sky pixel (HEALPix) to its containing tile, enabling fast probability computation.
+3. **`config.ini`** – contains telescope parameters and paths to the above files. Generated using `write_config_file.py`.
+
 
 ---
 
-## Setting Up a New Telescope
+## Setting Up a Telescope
 
-Create a `config.ini` file using `write_config_file.py` for the telescope you want to use. This will also generate tile-pixel maps that enable fast ranked-tile generation if not already available when you download this repo.
+Before using a telescope, create a config.ini file using write_config_file.py. This script also generates tile-pixel maps if they are missing for your telescope. These maps are crucial for rapid computation of ranked tiles.
 
 ### Arguments
 
@@ -61,12 +68,11 @@ python write_config_file.py --work ~/RunDir/sky_tile_work --telescope BlackGEM -
 ---
 
 ## Tile-Pixel Maps
+Tile-pixel maps are essential for fast ranked-tile computation. They map HEALPix sky pixels to tiles so that the probability contained in each tile can be computed quickly. Precomputed maps for **ATLAS, BlackGEM, PS1, ZTF** at `nside=256` are included. 
 
-Tile-pixel maps enable fast ranked-tile generation. Precomputed maps for **ATLAS, BlackGEM, PS1, ZTF** at `nside=256` are included. For non-standard telescopes or higher resolutions, generate your own.
+For non-standard telescopes or higher resolutions, generate your own as follows:
 
-### Options for Non-Standard Telescopes
-
-**Option 1: Provide a tile center file**
+**Method 1: Provide a tile center file**
 
 ```
 ID        ra_center   dec_center
@@ -83,7 +89,7 @@ Command:
 python write_config_file.py --work ~/RunDir/sky_tile_work --telescope <telescope> --site <site or None> --timemag <file or None> --tilefile <full path> --extension png
 ```
 
-**Option 2: Generate a tile-center file using FOV**
+**Method 2: Generate a tile-center file using FOV**
 
 ```bash
 python write_config_file.py --work ~/RunDir/sky_tile_work --telescope <telescope> --site <site or None> --timemag <file or None> --fov <FOV> --extension png
