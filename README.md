@@ -98,6 +98,7 @@ python write_config_file.py --work ~/RunDir/sky_tile_work --telescope <telescope
 > Both options create the tile-pixel map and save paths in the config file. Construction time depends on `--nside` and FOV. Default nside is 256.
 
 ---
+# Examples
 
 ## Running Ranked-Tiling Codes
 
@@ -137,9 +138,48 @@ Example output:
 
 ---
 
-## Other Methods
 
-1. **searchedArea**: Computes total searched area and probability for a given injection position
-2. **sourceTile**: Finds the tile containing the source
-3. **detectability**: Computes detectability based on source tile rank, integration time, total observation time, distance, and telescope limiting magnitude vs time
+## Scheduling Observations
+
+Create a scheduler object for a telescope site:
+
+```python
+from scheduler import Scheduler
+from astropy.coordinates import EarthLocation
+
+site = EarthLocation.of_site("lapalma")  # or explicit lat/long/elev
+
+obs = Scheduler(
+    skymapFile="bayestar.fits.gz",
+    configfile="config.ini",
+    astropy_site_location=site,
+    outdir="results/",
+    resolution=256
+)
+```
+
+Generate an observation schedule:
+
+```python
+schedule = obs.observationSchedule(
+    duration=5*3600,            # total observing time (s)
+    eventTime=1245091234,       # trigger time (GPS)
+    integrationTime=2*70,       # exposures × integration time (s)
+    CI=0.90,                    # desired confidence interval
+    save_schedule=True,
+    tag="GRB1234_GOTO"
+)
+```
+
+Example output (saved as CSV):
+
+| Tile\_Index | RA     | Dec    | Start\_Time (UTC) | Exposure (s) |
+| ----------- | ------ | ------ | ----------------- | ------------ |
+| 691         | 24.71  | -85.93 | 2023-01-01 01:23  | 140          |
+| 733         | 76.14  | -85.93 | 2023-01-01 01:47  | 140          |
+| 644         | 127.57 | -85.93 | 2023-01-01 02:11  | 140          |
+
+---
+
+
 
