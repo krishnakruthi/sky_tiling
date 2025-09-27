@@ -60,7 +60,7 @@ class Scheduler(RankedTileGenerator):
 			site = configParser.get('observation', 'site')
 			self.Observatory = EarthLocation.of_site(site)
 		
-		self.tileData = np.recfromtxt(self.tileCoord, names=True)
+		self.tileData = np.genfromtxt(self.tileCoord, names=True)
 		df_ranked_tiles = pd.read_csv(ranked_tiles_csv, header=0, index_col=False)
 		self.tileIndices = df_ranked_tiles["tile_index"].values
 		self.tileProbs = df_ranked_tiles["tile_prob"].values

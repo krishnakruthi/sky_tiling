@@ -30,7 +30,7 @@ def evolve_abs_Mag(dt, model, offset=0):	### UNDERDEVELOPMENT ###
 	offset	:: (Optional) The offset of the peak of the light curve from the merger.
 	'''
 
-	data = np.recfromtxt(model, names=True)
+	data = np.genfromtxt(model, names=True)
 	s = interpolate.UnivariateSpline(data['time'], data['magnitude'], k=5)
 	mag = s(dt - offset)
 

@@ -88,7 +88,7 @@ class RankedTileGenerator:
    
 		if tileFile is None:
 			tileFile = self.configParser.get('tileFiles', 'tileFile')
-		self.tileData = np.recfromtxt(tileFile, names=True)
+		self.tileData = np.genfromtxt(tileFile, names=True)
 		
 		self.preCompDictFiles = {64:preComputed_64, 128:preComputed_128,
 					256:preComputed_256, 512:preComputed_512,
