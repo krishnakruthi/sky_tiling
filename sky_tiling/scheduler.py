@@ -25,7 +25,6 @@ from scipy import interpolate
 from astropy.time import Time
 from astropy import units as u
 from astropy.coordinates import get_sun
-from astropy.coordinates import get_moon
 from astropy.coordinates import get_body
 from .ranked_tiling import RankedTileGenerator
 
@@ -191,11 +190,11 @@ class Scheduler(RankedTileGenerator):
 							Sun = get_sun(time_clock_astropy)
 							sun_ra.append(Sun.ra.value)
 							sun_dec.append(Sun.dec.value)
-							Moon = get_moon(time_clock_astropy)
+							Moon = get_body("moon", time_clock_astropy)
 							sunMoonAngle = Sun.separation(Moon)
 							phaseAngle = np.arctan2(Sun.distance*np.sin(sunMoonAngle), Moon.distance - Sun.distance * np.cos(sunMoonAngle))
 							illumination = 0.5*(1.0 + np.cos(phaseAngle))
-							moon_altAz = get_moon(time_clock_astropy).transform_to(AltAz(obstime=time_clock_astropy, location=self.Observatory))
+							moon_altAz = get_body("moon", time_clock_astropy).transform_to(AltAz(obstime=time_clock_astropy, location=self.Observatory))
 							lunar_illumination.append(illumination)
 							moon_altitude.append(moon_altAz.alt.value)
 							moon_ra.append(Moon.ra.value)
