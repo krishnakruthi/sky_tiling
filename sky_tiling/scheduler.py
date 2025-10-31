@@ -68,6 +68,80 @@ class Scheduler(RankedTileGenerator):
 		self.tiles = SkyCoord(ra = self.tileData['ra_center']*u.degree, 
 					    dec = self.tileData['dec_center']*u.degree, 
 					    frame = 'icrs') ### Tile(s) 
+		
+		# ------------------ FAST VISIBILITY PRECOMPUTE (cached once) ------------------
+		# Use the same min-alt cut as tileVisibility (30 deg) for consistency
+		self._min_alt_deg = 30.0
+		self._min_alt_rad = np.deg2rad(self._min_alt_deg)
+
+		# Site latitude (radians) and its sin/cos
+		self._phi = self.Observatory.lat.radian
+		self._sphi = np.sin(self._phi)
+		self._cphi = np.cos(self._phi)
+
+		# Ranked tile coordinates (radians)
+		ranked_ids = self.tileIndices.astype(int)
+		self._alpha = np.deg2rad(self.tileData['ra_center'][ranked_ids])    # RA
+		self._delta = np.deg2rad(self.tileData['dec_center'][ranked_ids])   # Dec
+		sdel = np.sin(self._delta)
+		cdel = np.cos(self._delta)
+
+		# Threshold hour-angle H0 per tile solving sin h0 ≤ sφ sδ + cφ cδ cos H
+		num = np.sin(self._min_alt_rad) - self._sphi * sdel
+		den = self._cphi * cdel
+		# Where den == 0 (at poles), mark as invalid to avoid division warning
+		cosH0 = np.full_like(num, np.nan, dtype=float)
+		mask_den = den != 0.0
+		cosH0[mask_den] = num[mask_den] / den[mask_den]
+		# Tiles that can ever reach min altitude (clip to [-1,1], rest remain NaN)
+		cosH0 = np.clip(cosH0, -1.0, 1.0, where=mask_den, out=cosH0)
+		self._H0 = np.arccos(cosH0)                # NaN where never reaches min-alt
+		self._visible_ever_mask = ~np.isnan(self._H0)
+		# ------------------------------------------------------------------------------
+
+	# ---------------------------- PRIVATE FAST HELPERS ----------------------------
+	def _lst_rad(self, t: Time):
+		# Apparent sidereal angle at site longitude (radians)
+		return t.sidereal_time('apparent', longitude=self.Observatory.lon).radian
+
+	@staticmethod
+	def _wrap_pi(x):
+		# wrap to (-pi, +pi]
+		return (x + np.pi) % (2*np.pi) - np.pi
+
+	@staticmethod
+	def _wrap_2pi_pos(x):
+		# wrap to [0, 2pi)
+		return x % (2*np.pi)
+
+	def _jump_to_first_visible_tile(self, t_start: Time):
+		"""
+		Analytic, O(N) jump: from t_start, find the earliest time when ANY ranked tile
+		crosses the 30° altitude boundary. Returns a Time (or the same t_start if none).
+		"""
+		v = self._visible_ever_mask
+		if not np.any(v):
+			return t_start
+
+		theta = self._lst_rad(t_start)              # LST (rad)
+		H = self._wrap_pi(theta - self._alpha)      # hour angle now
+		H0 = self._H0                                # boundary per tile
+
+		# Already above?
+		up_now = np.abs(H[v]) <= H0[v]
+		if np.any(up_now):
+			return t_start
+
+		# Smallest positive ΔH to reach ±H0
+		dH_plus  = self._wrap_2pi_pos(+H0[v] - H[v])
+		dH_minus = self._wrap_2pi_pos(-H0[v] - H[v])
+		dH = np.minimum(dH_plus, dH_minus)
+		dH_min = float(np.min(dH))
+
+		# Convert ΔH to sidereal seconds; add tiny epsilon to clear boundary
+		dt_sec = dH_min * (86164.0905 / (2*np.pi)) + 1.0
+		return t_start + dt_sec * u.s
+	# -----------------------------------------------------------------------------
 
 	def tileVisibility(self, time):
 		'''
@@ -167,45 +241,62 @@ class Scheduler(RankedTileGenerator):
 		[_, _, _, altAz_sun] = self.tileVisibility(time_clock_astropy)
 
 		## Checking and logging if sun is up; advancing to sunset ##
-		if altAz_sun.alt.value >= -18.0: 
-			logging.info('Event time (UTC): '+ str(time_clock_astropy.utc.datetime)+'; Sun is above the horizon')
+		sun_alt_deg = float(altAz_sun.alt.value)
+		if sun_alt_deg >= -18.0: 
+			logging.info(f'Event time (UTC): {time_clock_astropy.utc.datetime}; Sun altitude = {sun_alt_deg:.1f}° (twilight/day)')
 			time_clock_astropy = self.advanceToSunset(time_clock_astropy.to_value('gps'), integrationTime)
+			# FAST: jump to first time any tile crosses 30° (no time scan)
+			time_clock_astropy = self._jump_to_first_visible_tile(time_clock_astropy)
 			logging.info('Scheduling observations starting (UTC): ' + str(time_clock_astropy.utc.datetime))
 		## Logging when sun is down ##
-		else: logging.info('Event time (UTC): '+ str(time_clock_astropy.utc.datetime)+'; Scheduling observations right away!')
+		else: logging.info(f'Event time (UTC): {time_clock_astropy.utc.datetime}; Sun altitude = {sun_alt_deg:.1f}° (astronomical night) — scheduling now!')
 		
 		## Start scheduling observations ##
 		while observedTime <= duration: 
 			[tileIndices, tileProbs, altAz_tile, altAz_sun] = self.tileVisibility(time_clock_astropy)
-			## check if sun is still down; not so relevant for the very first observation ##
-			if altAz_sun.alt.value < -18.0:
-				for jj in np.arange(len(tileIndices)):
-    			## out of all the visible tiles find the one that is above the probability threshold and not scheduled yet ##
-					if tileIndices[jj] not in scheduled:
-						# if tileProbs[jj] >= thresholdTileProb:
-							scheduled = np.append(scheduled, tileIndices[jj])
-							obs_tile_altAz.append(altAz_tile[jj])
-							ObsTimes.append(time_clock_astropy)
-							pVal_observed.append(tileProbs[jj])
-							Sun = get_sun(time_clock_astropy)
-							sun_ra.append(Sun.ra.value)
-							sun_dec.append(Sun.dec.value)
-							Moon = get_body("moon", time_clock_astropy)
-							sunMoonAngle = Sun.separation(Moon)
-							phaseAngle = np.arctan2(Sun.distance*np.sin(sunMoonAngle), Moon.distance - Sun.distance * np.cos(sunMoonAngle))
-							illumination = 0.5*(1.0 + np.cos(phaseAngle))
-							moon_altAz = get_body("moon", time_clock_astropy).transform_to(AltAz(obstime=time_clock_astropy, location=self.Observatory))
-							lunar_illumination.append(illumination)
-							moon_altitude.append(moon_altAz.alt.value)
-							moon_ra.append(Moon.ra.value)
-							moon_dec.append(Moon.dec.value)
-							break
+			sun_alt_now = float(altAz_sun.alt.value)
+
+			## If night (not so relevant for the very first observation), try to schedule; if nothing is up, jump once to first visibility within the night
+			if sun_alt_now < -18.0:
+				if len(tileIndices) == 0:
+					# FAST analytic jump (no loops): move to first time any tile crosses 30°
+					t_candidate = self._jump_to_first_visible_tile(time_clock_astropy)
+					# Only jump if we really moved forward
+					if t_candidate > time_clock_astropy:
+						time_clock_astropy = t_candidate
+						tileIndices, tileProbs, altAz_tile, altAz_sun = self.tileVisibility(time_clock_astropy)
+
+				else:
+					for jj in np.arange(len(tileIndices)):
+    				## out of all the visible tiles find the one that is above the probability threshold and not scheduled yet ##
+						if tileIndices[jj] not in scheduled:
+							# if tileProbs[jj] >= thresholdTileProb:
+								scheduled = np.append(scheduled, tileIndices[jj])
+								obs_tile_altAz.append(altAz_tile[jj])
+								ObsTimes.append(time_clock_astropy)
+								pVal_observed.append(tileProbs[jj])
+								Sun = get_sun(time_clock_astropy)
+								sun_ra.append(Sun.ra.value)
+								sun_dec.append(Sun.dec.value)
+								Moon = get_body("moon", time_clock_astropy)
+								sunMoonAngle = Sun.separation(Moon)
+								phaseAngle = np.arctan2(Sun.distance*np.sin(sunMoonAngle), Moon.distance - Sun.distance * np.cos(sunMoonAngle))
+								illumination = 0.5*(1.0 + np.cos(phaseAngle))
+								moon_altAz = get_body("moon", time_clock_astropy).transform_to(AltAz(obstime=time_clock_astropy, location=self.Observatory))
+								lunar_illumination.append(illumination)
+								moon_altitude.append(moon_altAz.alt.value)
+								moon_ra.append(Moon.ra.value)
+								moon_dec.append(Moon.dec.value)
+								break
 							## break soon as you find the desired tile ##
 			
-			else: ## this is relevant only at the end of an epoch ##
+			else:
+				## this is relevant only at the end of an epoch ##
 				logging.info("Epoch completed!")
-				logging.info(str(time_clock_astropy.utc.datetime) + ': Sun above the horizon')
+				logging.info(str(time_clock_astropy.utc.datetime) + f': Sun altitude = {sun_alt_now:.1f}° (twilight/day)')
 				time_clock_astropy = self.advanceToSunset(time_clock_astropy.to_value('gps'), integrationTime)
+				# FAST: jump to first visibility after sunset
+				time_clock_astropy = self._jump_to_first_visible_tile(time_clock_astropy)
 				logging.info('Advancing time (UTC) to ' + str(time_clock_astropy.utc.datetime))
 
 			## continue in the loop ##
