@@ -269,3 +269,72 @@ class Scheduler(RankedTileGenerator):
 				df.to_csv(self.outdir+tag+"_schedule.csv", index=False)
 
 			return df
+		
+
+	def observationSchedule_space_telescope(self, duration, eventTime, integrationTime=120, latency=900, save_schedule=False, tag=None):
+		'''
+		METHOD  :: Simplified version of observationSchedule() for space telescopes.
+				Removes altitude, Sun, Moon, and visibility constraints.
+				Schedules tiles sequentially by rank until all are covered or duration ends.
+
+		duration           :: Total duration of the observation in seconds.
+		eventTime          :: GPS time of the GW trigger.
+		latency            :: Time between eventTime and start of observations (default = 900 s)
+		integrationTime    :: Time spent per tile in seconds (default = 120 s)
+
+		'''
+
+		observedTime = 0  # initialize time counter
+		scheduled = np.array([])  # tile indices scheduled
+		ObsTimes = []  # observation times
+		pVal_observed = []  # probabilities of observed tiles
+
+		# initialize start clock
+		time_clock_astropy = Time(eventTime + latency, format='gps')
+		logging.info(f"Scheduling observations starting (UTC): {time_clock_astropy.utc.datetime}")
+
+		# Start scheduling loop
+		while observedTime <= duration and len(scheduled) < len(self.tileIndices):
+			tile_idx = len(scheduled)  # next tile in rank order
+			scheduled = np.append(scheduled, self.tileIndices[tile_idx])
+			ObsTimes.append(time_clock_astropy)
+			pVal_observed.append(self.tileProbs[tile_idx])
+
+			# increment time
+			observedTime += integrationTime
+			time_clock_astropy += integrationTime * u.s
+
+
+		# compute RA/Dec and slews
+		RA_scheduled_tile = np.deg2rad(self.tileData['ra_center'][scheduled.astype(int)])
+		Dec_scheduled_tile = np.deg2rad(self.tileData['dec_center'][scheduled.astype(int)])
+
+		# compute slew distances between consecutive tiles
+		slewDist = [0.0]
+		for ii in range(1, len(scheduled)):
+			slewDist.append(np.rad2deg(np.arccos(
+				np.sin(Dec_scheduled_tile[ii]) * np.sin(Dec_scheduled_tile[ii-1]) +
+				(np.cos(Dec_scheduled_tile[ii]) * np.cos(Dec_scheduled_tile[ii-1]) *
+				np.cos(RA_scheduled_tile[ii] - RA_scheduled_tile[ii-1]))
+			)))
+
+		# build output dataframe
+		tile_obs_times = [t.utc.datetime for t in ObsTimes]
+		df = pd.DataFrame(np.vstack((
+			tile_obs_times,
+			scheduled.astype(int),
+			self.tileData['ra_center'][scheduled.astype(int)],
+			self.tileData['dec_center'][scheduled.astype(int)],
+			np.array(pVal_observed),
+			np.array(slewDist)
+		)).T, columns=['Observation_Time', 'Tile_Index', 'RA', 'Dec', 'Tile_Probs', 'Slew Angle (deg)'])
+
+		# optional save
+		if save_schedule:
+			if tag is None:
+				tag = self.configParser.get('plot', 'filenametag') if hasattr(self, 'configParser') else 'space'
+			df.to_csv(self.outdir + tag + "_schedule.csv", index=False)
+
+		return df
+
+
