@@ -168,7 +168,7 @@ class Scheduler(RankedTileGenerator):
 
 		## Checking and logging if sun is up; advancing to sunset ##
 		if altAz_sun.alt.value >= -18.0: 
-			logging.info('Event time (UTC): '+ str(time_clock_astropy.utc.datetime)+'; Sun is above the horizon')
+			logging.info('Event time (UTC): '+ str(time_clock_astropy.utc.datetime)+'; Sun above horizon (sun alt: '+str(altAz_sun.alt.value)+')')
 			time_clock_astropy = self.advanceToSunset(time_clock_astropy.to_value('gps'), integrationTime)
 			logging.info('Scheduling observations starting (UTC): ' + str(time_clock_astropy.utc.datetime))
 		## Logging when sun is down ##
@@ -203,8 +203,9 @@ class Scheduler(RankedTileGenerator):
 							## break soon as you find the desired tile ##
 			
 			else: ## this is relevant only at the end of an epoch ##
-				logging.info("Epoch completed!")
-				logging.info(str(time_clock_astropy.utc.datetime) + ': Sun above the horizon')
+				logging.info(f"Epoch completed at {time_clock_astropy.utc.datetime}; Sun altitude: {altAz_sun.alt.value})")
+				if len(scheduled) == len(self.tileIndices):
+					break
 				time_clock_astropy = self.advanceToSunset(time_clock_astropy.to_value('gps'), integrationTime)
 				logging.info('Advancing time (UTC) to ' + str(time_clock_astropy.utc.datetime))
 
