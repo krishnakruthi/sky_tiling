@@ -243,9 +243,9 @@ class Scheduler(RankedTileGenerator):
 			## Formula: Angular separation = arccos(sin(dec1)*sin(dec2) + (cos(dec1)*cos(dec2)*cos(ra1 - ra2)) ##
 			
 			RA_scheduled_tile = np.deg2rad(self.tileData['ra_center']\
-								[np.isin(self.tileData['ID'], scheduled.astype('int'))])
+								[np.isin(self.tileData['ID'].astype(int), scheduled.astype('int'))])
 			Dec_scheduled_tile = np.deg2rad(self.tileData['dec_center']\
-								[np.isin(self.tileData['ID'], scheduled.astype('int'))])
+								[np.isin(self.tileData['ID'].astype(int), scheduled.astype('int'))])
 			RA_Moontile = np.deg2rad(self.tileData['ra_center'][moonTile])
 			Dec_Moontile = np.deg2rad(self.tileData['dec_center'][moonTile])
 

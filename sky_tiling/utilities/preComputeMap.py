@@ -25,7 +25,7 @@ def preComputeMap(tileFile, telescope, target_nside=256):
 	dec = np.rad2deg(0.5*np.pi - theta) # Construct dec array
 	pixelIndex = np.arange(npix)
 
-	data = np.genfromtxt(tileFile, names=True)
+	data = np.genfromtxt(tileFile, names=True, dtype=None, encoding='utf-8')
 	RA_tile = data['ra_center'] ### RA value of the telescope fields
 	Dec_tile = data['dec_center'] ### Dec values of the telescope fields
 	tile_index = data['ID'] ### Indexing the tiles

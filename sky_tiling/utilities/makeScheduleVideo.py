@@ -79,7 +79,7 @@ class MakeVideo:
 		m.plot(RAP_map, DecP_map, color='y', marker='.', linewidth=0, markersize=4, alpha=1.0) 
 		if self.event: m.plot(RAP_event, DecP_event, color='b', marker='*', linewidth=0, markersize=20, alpha=1.0) 
 		tileFile = self.configParser.get('tileFiles', 'tileFile')
-		tileData = np.genfromtxt(tileFile, names=True)
+		tileData = np.genfromtxt(tileFile, names=True, dtype=None, encoding='utf-8')
 		Dec_tile = tileData['dec_center']
 		RA_tile = tileData['ra_center']
 		ID = tileData['ID']	

@@ -88,7 +88,7 @@ class RankedTileGenerator:
    
 		if tileFile is None:
 			tileFile = self.configParser.get('tileFiles', 'tileFile')
-		self.tileData = np.genfromtxt(tileFile, names=True)
+		self.tileData = np.genfromtxt(tileFile, names=True, dtype=None, encoding='utf-8')
 		
 		self.preCompDictFiles = {64:preComputed_64, 128:preComputed_128,
 					256:preComputed_256, 512:preComputed_512,
@@ -111,7 +111,7 @@ class RankedTileGenerator:
 
 		Dec_tile = self.tileData['dec_center']
 		RA_tile =  self.tileData['ra_center']
-		ID = self.tileData['ID']
+		ID = self.tileData['ID'].astype(int)
 		s = np.arccos( np.sin(np.pi*dec/180.)\
 			* np.sin(np.pi*Dec_tile/180.)\
 			+ np.cos(np.pi*dec/180.)\
@@ -460,7 +460,7 @@ class RankedTileGenerator:
 		
 		Dec_tile = self.tileData['dec_center']
 		RA_tile = self.tileData['ra_center']
-		tile_index = self.tileData['ID']
+		tile_index = self.tileData['ID'].astype(int)
 		closestTileIndex = []
 
 		sampleIndex = samples[:,0]
