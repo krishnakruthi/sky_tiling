@@ -129,8 +129,7 @@ class Scheduler(RankedTileGenerator):
 			
 	# 	return setTime
 
-	def observationSchedule(self, duration, eventTime, integrationTime=120, CI=0.9, latency=900,
-							observedTiles=None, save_schedule=False, tag=None):
+	def observationSchedule(self, duration, eventTime, integrationTime=120, latency=900, save_schedule=False, tag=None):
 		'''
 		METHOD	:: This method takes the duration of observation, time of the GW trigger
 				   integration time per tile as input and outputs the observation
@@ -140,15 +139,8 @@ class Scheduler(RankedTileGenerator):
 		eventTime  		 :: The gps time of the time of the GW trigger.
 		latency          :: Time between eventTime and start of observations (default=900s)
 		integrationTime  :: Time spent per tile in seconds (default == 120 seconds)
-		observedTiles	 :: (Future development) Array of tile indices that has been 
-							observed in an earlier epoch
 				   
 		'''
-
-		# includeTiles = np.cumsum(self.tileProbs) < CI
-		# includeTiles[0] = True ## Always include the first tile ##
-		
-		# thresholdTileProb = self.tileProbs[includeTiles][-1]
 
 		observedTime = 0 ## Initiating the observed times ##
 		scheduled = np.array([]) ## tile indices scheduled for observation ##
