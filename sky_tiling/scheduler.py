@@ -129,7 +129,7 @@ class Scheduler(RankedTileGenerator):
 			
 	# 	return setTime
 
-	def observationSchedule(self, duration, eventTime, integrationTime=120, latency=900, save_schedule=False, tag=None):
+	def observationSchedule(self, duration, eventTime, integrationTime=120, latency=900, save_schedule=False, tag=None, n_units=1):
 		'''
 		METHOD	:: This method takes the duration of observation, time of the GW trigger
 				   integration time per tile as input and outputs the observation
@@ -139,6 +139,8 @@ class Scheduler(RankedTileGenerator):
 		eventTime  		 :: The gps time of the time of the GW trigger.
 		latency          :: Time between eventTime and start of observations (default=900s)
 		integrationTime  :: Time spent per tile in seconds (default == 120 seconds)
+		n_units          :: Number of co-located units observing in parallel; each time step
+		                    observes up to n_units tiles at the same time (default = 1)
 				   
 		'''
 
@@ -171,6 +173,7 @@ class Scheduler(RankedTileGenerator):
 			[tileIndices, tileProbs, altAz_tile, altAz_sun] = self.tileVisibility(time_clock_astropy)
 			## check if sun is still down; not so relevant for the very first observation ##
 			if altAz_sun.alt.value < -18.0:
+				n_this_step = 0  ## tiles observed in this time step, one per unit ##
 				for jj in np.arange(len(tileIndices)):
     			## out of all the visible tiles find the one that is above the probability threshold and not scheduled yet ##
 					if tileIndices[jj] not in scheduled:
@@ -191,8 +194,10 @@ class Scheduler(RankedTileGenerator):
 							moon_altitude.append(moon_altAz.alt.value)
 							moon_ra.append(Moon.ra.value)
 							moon_dec.append(Moon.dec.value)
-							break
-							## break soon as you find the desired tile ##
+							n_this_step += 1
+							if n_this_step == n_units:
+								break
+								## break as soon as every unit has a tile ##
 			
 			else: ## this is relevant only at the end of an epoch ##
 				logging.info(f"Epoch completed at {time_clock_astropy.utc.datetime}; Sun altitude: {altAz_sun.alt.value})")
